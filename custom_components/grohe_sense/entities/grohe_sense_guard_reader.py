@@ -1,28 +1,25 @@
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta, date
+from datetime import datetime, timedelta, date
 from typing import List
 
-from custom_components.grohe_sense.dto.measurement_guard_dto import MeasurementGuardDTO
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
-from custom_components.grohe_sense import BASE_URL
+from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
-from custom_components.grohe_sense.dto.measurement_sense_dto import MeasurementSenseDTO
-from custom_components.grohe_sense.dto.sensor_data_dto import SensorDataDTO
-from custom_components.grohe_sense.dto.withdrawals_dto import WithdrawalDTO
-from custom_components.grohe_sense.enum.grohe_types import GroheTypes
+from custom_components.grohe_sense.dto.ondus_dtos import Data, Withdrawal, Measurement
+from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class GroheSenseGuardReader:
 
-    def __init__(self, auth_session, device: GroheDeviceDTO):
-        self._auth_session = auth_session
+    def __init__(self, ondus_api: OndusApi, device: GroheDeviceDTO):
+        self._ondus_api = ondus_api
         self._device = device
 
-        self._sensor_data: SensorDataDTO | None = None
+        self._sensor_data: Data | None = None
         self.poll_from = datetime.now()
         self._fetching_data = None
         self._data_fetch_completed = datetime.min
@@ -41,7 +38,7 @@ class GroheSenseGuardReader:
         # Always get the values for the last seven days
         self._poll_from = value - timedelta(7)
 
-    def __get_last_measurement(self) -> MeasurementGuardDTO | None:
+    def __get_last_measurement(self) -> Measurement | None:
         return self._sensor_data.measurement[0] if self._sensor_data.measurement else None
 
     async def async_update(self):
@@ -61,34 +58,34 @@ class GroheSenseGuardReader:
 
         poll_from = self._poll_from.strftime('%Y-%m-%d')
 
-        measurements_response = await self._auth_session.get(
-            BASE_URL + f'locations/{self._device.locationId}/rooms/{self._device.roomId}/appliances/{self._device.applianceId}/data/aggregated?from={poll_from}')
+        measurements_response = await self._ondus_api.get_appliance_data(self._device.locationId, self._device.roomId,
+                                                                         self._device.applianceId, poll_from)
 
-        measurements: List[MeasurementGuardDTO | MeasurementSenseDTO] = []
-        withdrawals: List[WithdrawalDTO] = []
+        measurements: List[Measurement] = []
+        withdrawals: List[Withdrawal] = []
 
-        if 'measurement' in measurements_response['data'] and measurements_response['data']['measurement'] is not None:
-            for measurement in measurements_response['data']['measurement']:
+        if 'measurement' in measurements_response.data and measurements_response.data.measurement is not None:
+            for measurement in measurements_response.data.measurement:
                 if self._device.type == GroheTypes.GROHE_SENSE:
-                    measurements.append(MeasurementSenseDTO(**measurement))
+                    measurements.append(Measurement(**measurement))
                 elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
-                    measurements.append(MeasurementGuardDTO(**measurement))
+                    measurements.append(Measurement(**measurement))
 
             measurements.sort(key=lambda m: m.date, reverse=True)
 
             for measurement in measurements:
                 measurement.date = datetime.strptime(measurement.date, '%Y-%m-%d').astimezone().date()
 
-        if 'withdrawals' in measurements_response['data'] and measurements_response['data']['withdrawals'] is not None:
-            for withdrawal in measurements_response['data']['withdrawals']:
-                withdrawals.append(WithdrawalDTO(**withdrawal))
+        if 'withdrawals' in measurements_response.data and measurements_response.data.withdrawals is not None:
+            for withdrawal in measurements_response.data.withdrawals:
+                withdrawals.append(Withdrawal(**withdrawal))
             withdrawals.sort(key=lambda m: m.date, reverse=True)
 
             for withdrawal in withdrawals:
                 withdrawal.date = datetime.strptime(withdrawal.date, '%Y-%m-%d').astimezone().date()
 
-        self._sensor_data: SensorDataDTO = SensorDataDTO(group_by=measurements_response['data']['group_by'],
-                                                         measurement=measurements, withdrawals=withdrawals)
+        self._sensor_data: Data = Data(group_by=measurements_response.data.group_by,
+                                       measurement=measurements, withdrawals=withdrawals)
 
         _LOGGER.debug('Data read: %s', self._sensor_data)
 

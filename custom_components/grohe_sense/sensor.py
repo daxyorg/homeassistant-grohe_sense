@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from . import (DOMAIN, GROHE_SENSE_GUARD_TYPE)
+from .api.ondus_api import OndusApi
 from .dto.grohe_device_dto import GroheDeviceDTO
 
 from .entities.grohe_sense import GroheSenseEntity
@@ -9,7 +10,7 @@ from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
 from .entities.grohe_sense_guard_reader import GroheSenseGuardReader
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
 from .enum.grohe_sense_sensor_types_per_unit import SENSOR_TYPES_PER_UNIT
-from .enum.grohe_types import GroheTypes
+from .enum.ondus_types import GroheTypes
 from .oauth.oauth_session import OauthSession
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,13 +26,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     auth_session: OauthSession = hass.data[DOMAIN]['session']
+    ondus_api = OndusApi(auth_session)
 
     entities: List[GroheSenseNotificationEntity | GroheSenseEntity | GroheSenseGuardWithdrawalsEntity] = []
     devices: List[GroheDeviceDTO] = hass.data[DOMAIN]['devices']
 
     for device in devices:
-        reader = GroheSenseGuardReader(auth_session, device)
-        entities.append(GroheSenseNotificationEntity(auth_session, device))
+        reader = GroheSenseGuardReader(ondus_api, device)
+        entities.append(GroheSenseNotificationEntity(ondus_api, device))
 
         if device.type in SENSOR_TYPES_PER_UNIT:
             for info in SENSOR_TYPES_PER_UNIT.get(device.type, []):

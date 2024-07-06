@@ -1,10 +1,5 @@
 import logging
-import asyncio
-import collections
 from typing import List
-
-from lxml import html
-import json
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -12,8 +7,9 @@ import voluptuous as vol
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.discovery import async_load_platform
 
+from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
-from custom_components.grohe_sense.enum.grohe_types import GroheTypes
+from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 from custom_components.grohe_sense.oauth.oauth_session import OauthSession, get_refresh_token
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,9 +29,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-GROHE_SENSE_TYPE = 101  # Type identifier for the battery powered water detector
-GROHE_SENSE_GUARD_TYPE = 103  # Type identifier for sense guard, the water guard installed on your water pipe
-
 
 async def async_setup(hass, config):
     _LOGGER.debug("Loading Grohe Sense")
@@ -53,22 +46,21 @@ async def initialize_shared_objects(hass, username, password):
     auth_session = OauthSession(session, BASE_URL, username, password,
                                 await get_refresh_token(session, BASE_URL, username, password))
 
+    ondus_api = OndusApi(auth_session)
+
     devices: List[GroheDeviceDTO] = []
 
     hass.data[DOMAIN] = {'session': auth_session, 'devices': devices}
 
-    locations = await auth_session.get(BASE_URL + f'locations')
+    locations = await ondus_api.get_locations()
 
     for location in locations:
         _LOGGER.debug('Found location %s', location)
-        locationId = location['id']
-        rooms = await auth_session.get(BASE_URL + f'locations/{locationId}/rooms')
+        rooms = await ondus_api.get_rooms(location.id)
         for room in rooms:
             _LOGGER.debug('Found room %s', room)
-            roomId = room['id']
-            appliances = await auth_session.get(BASE_URL + f'locations/{locationId}/rooms/{roomId}/appliances')
+            appliances = await ondus_api.get_appliances(location.id, room.id)
             for appliance in appliances:
                 _LOGGER.debug('Found appliance %s', appliance)
-                applianceId = appliance['appliance_id']
                 devices.append(
-                    GroheDeviceDTO(locationId, roomId, applianceId, GroheTypes(appliance['type']), appliance['name']))
+                    GroheDeviceDTO(location.id, room.id, appliance.appliance_id, GroheTypes(appliance.type), appliance.name))

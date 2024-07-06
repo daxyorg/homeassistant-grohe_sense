@@ -4,7 +4,7 @@ from typing import List
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from custom_components.grohe_sense import BASE_URL
+from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 
@@ -38,8 +38,8 @@ NOTIFICATION_TYPES = {
 
 
 class GroheSenseNotificationEntity(Entity):
-    def __init__(self, auth_session, device: GroheDeviceDTO):
-        self._auth_session = auth_session
+    def __init__(self, ondus_api: OndusApi, device: GroheDeviceDTO):
+        self._ondus_api = ondus_api
         self._device = device
         self._notifications: List[Notification] = []
 
@@ -67,9 +67,8 @@ class GroheSenseNotificationEntity(Entity):
         # Reset notifications
         self._notifications = []
 
-        notifications = await self._auth_session.get(
-            BASE_URL + f'locations/{self._device.locationId}/rooms/{self._device.roomId}/appliances/{self._device.applianceId}/notifications')
-
+        notifications = await self._ondus_api.get_appliance_notifications(self._device.locationId, self._device.roomId,
+                                                                          self._device.applianceId)
         for notification in notifications:
             self._notifications.append(Notification(**notification))
 

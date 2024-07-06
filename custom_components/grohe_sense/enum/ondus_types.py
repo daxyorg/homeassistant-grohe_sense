@@ -7,3 +7,9 @@ class OndusGroupByTypes(Enum):
     WEEK = "week"
     MONTH = "month"
     YEAR = "year"
+
+
+class GroheTypes(Enum):
+    GROHE_SENSE = 101  # Type identifier for the battery powered water detector
+    GROHE_SENSE_PLUS = 102
+    GROHE_SENSE_GUARD = 103  # Type identifier for sense guard, the water guard installed on your water pipe

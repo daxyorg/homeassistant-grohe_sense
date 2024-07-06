@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..enum.grohe_types import GroheTypes
+from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 
 @dataclass

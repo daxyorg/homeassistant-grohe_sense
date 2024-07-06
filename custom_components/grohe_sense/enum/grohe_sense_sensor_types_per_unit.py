@@ -1,4 +1,4 @@
-from custom_components.grohe_sense.enum.grohe_types import GroheTypes
+from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 SENSOR_TYPES_PER_UNIT = {
     GroheTypes.GROHE_SENSE: ['temperature', 'humidity'],

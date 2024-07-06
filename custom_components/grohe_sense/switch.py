@@ -5,7 +5,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.util import Throttle
 from homeassistant.const import (STATE_UNKNOWN)
 
-from . import (DOMAIN, BASE_URL, GROHE_SENSE_GUARD_TYPE)
+from . import (DOMAIN, BASE_URL)
+from .enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     auth_session = hass.data[DOMAIN]['session']
     entities = []
 
-    for device in filter(lambda d: d.type == GROHE_SENSE_GUARD_TYPE, hass.data[DOMAIN]['devices']):
+    for device in filter(lambda d: d.type == GroheTypes.GROHE_SENSE_GUARD, hass.data[DOMAIN]['devices']):
         entities.append(
             GroheSenseGuardValve(auth_session, device.locationId, device.roomId, device.applianceId, device.name))
     if entities:

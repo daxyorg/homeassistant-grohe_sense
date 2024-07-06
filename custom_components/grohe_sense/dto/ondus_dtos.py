@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from typing import List, Optional
@@ -188,15 +189,17 @@ class Notification:
 @dataclass
 class Measurement:
     date: str
-    flowrate: float
-    pressure: float
-    temperature_guard: float
+    flowrate: Optional[float]
+    pressure: Optional[float]
+    temperature_guard: Optional[float]
+    temperature: Optional[float]
+    humidity: Optional[float]
 
 
 @dataclass_json
 @dataclass
 class Withdrawal:
-    date: str
+    date: datetime | str
     waterconsumption: float
     hotwater_share: float
     water_cost: float
