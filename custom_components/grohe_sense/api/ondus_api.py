@@ -1,4 +1,5 @@
 import datetime
+import json
 import string
 import urllib.parse
 from typing import List, Optional
@@ -19,14 +20,14 @@ class OndusApi:
     async def get_dashboard(self) -> Locations:
         url = f'{self.__api_url}/dashboard'
         data = await self._session.get(url)
-        return Locations.from_json(data)
+        return Locations.from_dict(data)
 
     async def get_locations(self) -> List[Location]:
         url = f'{self.__api_url}/locations'
         data = await self._session.get(url)
         locations = []
         for location in data:
-            locations.append(Location.from_json(location))
+            locations.append(Location.from_dict(location))
         return locations
 
     async def get_rooms(self, location_id: string) -> List[Room]:
@@ -34,7 +35,7 @@ class OndusApi:
         data = await self._session.get(url)
         rooms = []
         for room in data:
-            rooms.append(Room.from_json(room))
+            rooms.append(Room.from_dict(room))
         return rooms
 
     async def get_appliances(self, location_id: string, room_id: string) -> List[Appliance]:
@@ -42,7 +43,7 @@ class OndusApi:
         data = await self._session.get(url)
         appliances = []
         for appliance in data:
-            appliances.append(Appliance.from_json(appliance))
+            appliances.append(Appliance.from_dict(appliance))
         return appliances
 
     async def get_appliance_info(self, location_id: string, room_id: string, appliance_id: string) -> Appliance:

@@ -1,7 +1,7 @@
 import datetime
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from homeassistant.components.persistent_notification import Notification
 
@@ -22,10 +22,10 @@ class Address:
 @dataclass_json
 @dataclass
 class Threshold:
-    quantity: str
     type: str
     value: int
     enabled: bool
+    quantity: str
 
 
 @dataclass_json
@@ -38,10 +38,13 @@ class Status:
 @dataclass_json
 @dataclass
 class Measurement:
-    battery: int
-    humidity: int
-    temperature: float
     timestamp: str
+    temperature: Optional[float] = None
+    humidity: Optional[int] = None
+    flow_rate: Optional[float] = None
+    pressure: Optional[float] = None
+    temperature_guard: Optional[float] = None
+    battery: Optional[int] = None
 
 
 @dataclass_json
@@ -55,7 +58,7 @@ class AverageMeasurements:
 @dataclass
 class DataLatest:
     measurement: Measurement
-    average_measurements: AverageMeasurements
+    average_measurements: Optional[AverageMeasurements] = None
 
 
 @dataclass_json
@@ -110,6 +113,49 @@ class ApplianceCommand:
     commandb64: str
     timestamp: str
 
+
+@dataclass_json
+@dataclass
+class Config:
+    thresholds: List[Threshold]
+    measurement_period: Optional[int] = None
+    action_on_major_leakage: Optional[int] = None
+    action_on_minor_leakage: Optional[int] = None
+    action_on_micro_leakage: Optional[int] = None
+    monitor_frost_alert: Optional[bool] = None
+    monitor_lower_flow_limit: Optional[bool] = None
+    monitor_upper_flow_limit: Optional[bool] = None
+    monitor_lower_pressure_limit: Optional[bool] = None
+    monitor_upper_pressure_limit: Optional[bool] = None
+    monitor_lower_temperature_limit: Optional[bool] = None
+    monitor_upper_temperature_limit: Optional[bool] = None
+    monitor_major_leakage: Optional[bool] = None
+    monitor_minor_leakage: Optional[bool] = None
+    monitor_micro_leakage: Optional[bool] = None
+    monitor_system_error: Optional[bool] = None
+    monitor_btw_0_1_and_0_8_leakage: Optional[bool] = None
+    monitor_withdrawel_amount_limit_breach: Optional[bool] = None
+    detection_interval: Optional[int] = None
+    impulse_ignore: Optional[int] = None
+    time_ignore: Optional[int] = None
+    pressure_tolerance_band: Optional[int] = None
+    pressure_drop: Optional[int] = None
+    detection_time: Optional[int] = None
+    action_on_btw_0_1_and_0_8_leakage: Optional[int] = None
+    action_on_withdrawel_amount_limit_breach: Optional[int] = None
+    withdrawel_amount_limit: Optional[int] = None
+    sprinkler_mode_active_monday: Optional[bool] = None
+    sprinkler_mode_active_tuesday: Optional[bool] = None
+    sprinkler_mode_active_wednesday: Optional[bool] = None
+    sprinkler_mode_active_thursday: Optional[bool] = None
+    sprinkler_mode_active_friday: Optional[bool] = None
+    sprinkler_mode_active_saturday: Optional[bool] = None
+    sprinkler_mode_active_sunday: Optional[bool] = None
+    sprinkler_mode_start_time: Optional[int] = None
+    sprinkler_mode_stop_time: Optional[int] = None
+    measurement_transmission_intervall: Optional[int] = None
+    measurement_transmission_intervall_offset: Optional[int] = None
+
 @dataclass_json
 @dataclass
 class Appliance:
@@ -121,18 +167,18 @@ class Appliance:
     version: str
     tdt: str
     timezone: int
-    config: Threshold
+    config: Config
     role: str
     registration_complete: bool
-    calculate_average_since: Optional[str]
-    pressure_notification: Optional[bool]
-    snooze_status: Optional[str]
-    last_pressure_measurement: Optional[LastPressureMeasurement]
-    installer: Optional[Installer]
-    command: Optional[Command]
-    notifications: Optional[List[Notification]]
-    status: Optional[List[Status]]
-    data_latest: Optional[DataLatest]
+    calculate_average_since: Optional[str] = None
+    pressure_notification: Optional[bool] = None
+    snooze_status: Optional[str] = None
+    last_pressure_measurement: Optional[LastPressureMeasurement] = None
+    installer: Optional[Installer] = None
+    command: Optional[Command] = None
+    notifications: Optional[List[Notification]] = None
+    status: Optional[List[Status]] = None
+    data_latest: Optional[DataLatest] = None
 
 
 @dataclass_json
@@ -143,7 +189,7 @@ class Room:
     type: int
     room_type: int
     role: str
-    appliances: List[Appliance]
+    appliances: Optional[List[Appliance]] = None
 
 
 @dataclass_json
@@ -163,7 +209,7 @@ class Location:
     default_heating_type: int
     emergency_shutdown_enable: bool
     address: Address
-    rooms: Optional[List[Room]]
+    rooms: Optional[List[Room]] = None
 
 
 @dataclass_json
@@ -199,7 +245,7 @@ class Measurement:
 @dataclass_json
 @dataclass
 class Withdrawal:
-    date: datetime | str
+    date: Union[datetime, str]
     waterconsumption: float
     hotwater_share: float
     water_cost: float

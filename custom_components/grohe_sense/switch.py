@@ -60,7 +60,7 @@ class GroheSenseGuardValve(SwitchEntity):
             _LOGGER.error('Failed to parse out valve_open from commands response: %s', command_response)
 
     async def _set_state(self, state):
-        data = {'type': GROHE_SENSE_GUARD_TYPE, 'command': {'valve_open': state}}
+        data = {'type': GroheTypes.GROHE_SENSE_GUARD, 'command': {'valve_open': state}}
         command_response = await self._auth_session.post(
             BASE_URL + f'locations/{self._locationId}/rooms/{self._roomId}/appliances/{self._applianceId}/command',
             data)

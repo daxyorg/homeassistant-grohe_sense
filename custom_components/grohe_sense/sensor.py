@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from . import (DOMAIN, GROHE_SENSE_GUARD_TYPE)
+from . import (DOMAIN)
 from .api.ondus_api import OndusApi
 from .dto.grohe_device_dto import GroheDeviceDTO
 

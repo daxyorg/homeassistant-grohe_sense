@@ -24,17 +24,23 @@ async def get_refresh_token(session: ClientSession, base_url: str, username: str
 
         payload = {
             'username': username,
-            'password': password,
+            'password': password
+        }
+        headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'origin': base_url,
             'referer': base_url + 'oidc/login',
             'X-Requested-With': 'XMLHttpRequest',
         }
         try:
-            response = await session.post(url=action, data=payload, cookies=cookie, allow_redirects=False)
+            response = await session.post(url=action, data=payload, headers=headers, cookies=cookie,
+                                          allow_redirects=False)
+
         except Exception as e:
             _LOGGER.error('Get Refresh Token Action Exception %s', str(e))
         else:
+            print(response.status)
+
             ondus_url = response.headers['Location'].replace('ondus', 'https')
             try:
                 response = await session.get(url=ondus_url, cookies=cookie)
