@@ -6,7 +6,7 @@ from homeassistant.util import Throttle
 
 from custom_components.grohe_sense import BASE_URL
 from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
-from custom_components.grohe_sense.dto.notification_dto import NotificationDto
+from custom_components.grohe_sense.dto.ondus_dtos import Notification
 
 NOTIFICATION_UPDATE_DELAY = timedelta(minutes=1)
 
@@ -41,7 +41,7 @@ class GroheSenseNotificationEntity(Entity):
     def __init__(self, auth_session, device: GroheDeviceDTO):
         self._auth_session = auth_session
         self._device = device
-        self._notifications: List[NotificationDto] = []
+        self._notifications: List[Notification] = []
 
     @property
     def name(self):
@@ -71,6 +71,6 @@ class GroheSenseNotificationEntity(Entity):
             BASE_URL + f'locations/{self._device.locationId}/rooms/{self._device.roomId}/appliances/{self._device.applianceId}/notifications')
 
         for notification in notifications:
-            self._notifications.append(NotificationDto(**notification))
+            self._notifications.append(Notification(**notification))
 
         self._notifications.sort(key=lambda n: n.timestamp, reverse=True)
