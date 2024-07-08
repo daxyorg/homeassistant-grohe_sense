@@ -59,26 +59,27 @@ class GroheSenseGuardReader:
         poll_from = self._poll_from.strftime('%Y-%m-%d')
 
         measurements_response = await self._ondus_api.get_appliance_data(self._device.locationId, self._device.roomId,
-                                                                         self._device.applianceId, poll_from)
+                                                                         self._device.applianceId,
+                                                                         datetime.strptime(poll_from, "%Y-%m-%d"))
 
         measurements: List[Measurement] = []
         withdrawals: List[Withdrawal] = []
 
-        if 'measurement' in measurements_response.data and measurements_response.data.measurement is not None:
+        if measurements_response.data.measurement is not None:
             for measurement in measurements_response.data.measurement:
                 if self._device.type == GroheTypes.GROHE_SENSE:
-                    measurements.append(Measurement(**measurement))
+                    measurements.append(measurement)
                 elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
-                    measurements.append(Measurement(**measurement))
+                    measurements.append(measurement)
 
             measurements.sort(key=lambda m: m.date, reverse=True)
 
             for measurement in measurements:
                 measurement.date = datetime.strptime(measurement.date, '%Y-%m-%d').astimezone().date()
 
-        if 'withdrawals' in measurements_response.data and measurements_response.data.withdrawals is not None:
+        if measurements_response.data.withdrawals is not None:
             for withdrawal in measurements_response.data.withdrawals:
-                withdrawals.append(Withdrawal(**withdrawal))
+                withdrawals.append(withdrawal)
             withdrawals.sort(key=lambda m: m.date, reverse=True)
 
             for withdrawal in withdrawals:

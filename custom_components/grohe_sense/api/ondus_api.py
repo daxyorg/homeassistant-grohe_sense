@@ -1,21 +1,240 @@
-import datetime
-import json
+import logging
 import string
 import urllib.parse
-from typing import List, Optional
+from datetime import datetime
+from http.cookies import SimpleCookie
+from typing import List, Optional, Tuple, Dict, Any
 
+import aiohttp
+from aiohttp import ClientSession
+from lxml import html
+
+from custom_components.grohe_sense.api.ondus_notifications import ondus_notifications
 from custom_components.grohe_sense.dto.ondus_dtos import Locations, Location, Room, Appliance, Notification, Status, \
-    ApplianceCommand, MeasurementData
-from custom_components.grohe_sense.enum.ondus_types import OndusGroupByTypes
-from custom_components.grohe_sense.oauth.oauth_session import OauthSession
+    ApplianceCommand, MeasurementData, OndusToken
+from custom_components.grohe_sense.enum.ondus_types import OndusGroupByTypes, OndusCommands, GroheTypes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OndusApi:
     __base_url: str = 'https://idp2-apigw.cloud.grohe.com'
     __api_url: str = __base_url + '/v3/iot'
+    __tokens: OndusToken = None
+    __token_update_time: datetime = None
+    __username: str = None
+    __password: str = None
 
-    def __init__(self, session: OauthSession) -> None:
+    def __init__(self, session: ClientSession) -> None:
         self._session = session
+
+    def __set_token(self, token: OndusToken) -> None:
+        """
+        Set the token and update the last update
+
+        :param token: The token to be set.
+        :return: None
+        """
+        self.__tokens = token
+        self.__token_update_time = datetime.now()
+
+    async def __get_oidc_action(self) -> Tuple[SimpleCookie, str]:
+        """
+        Get the cookie and action from the OIDC login endpoint.
+
+        :return: A tuple containing the cookie and action URL.
+        :rtype: Tuple[SimpleCookie, str]
+        """
+        try:
+            response = await self._session.get(f'{self.__api_url}/oidc/login')
+        except aiohttp.ClientError as e:
+            _LOGGER.error('Could not access url /oidc/login %s', str(e))
+        else:
+            cookie = response.cookies
+            tree = html.fromstring(await response.text())
+
+            name = tree.xpath("//html/body/div/div/div/div/div/div/div/form")
+            action = name[0].action
+
+            return cookie, action
+
+    async def __login(self, url: str, username: str, password: str, cookies: SimpleCookie) -> str:
+        """
+        Login to the specified URL with the provided username, password, and cookies.
+
+        :param url: The URL to log in to.
+        :type url: str
+        :param username: The username for authentication.
+        :type username: str
+        :param password: The password for authentication.
+        :type password: str
+        :param cookies: The cookies to include in the request.
+        :type cookies: SimpleCookie
+        :return: The token URL if login is successful, otherwise returns None.
+        :rtype: str
+        """
+        payload = {
+            'username': username,
+            'password': password
+        }
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'origin': self.__api_url,
+            'referer': self.__api_url + '/oidc/login',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+
+        try:
+            response = await self._session.post(url=url, data=payload, headers=headers, cookies=cookies,
+                                                allow_redirects=False)
+
+        except aiohttp.ClientError as e:
+            _LOGGER.error('Get Refresh Token Action Exception %s', str(e))
+        else:
+            if response.status == 302:
+                token_url = response.headers['Location'].replace('ondus', 'https')
+                return token_url
+            else:
+                _LOGGER.error('Login failed (and we got no redirect) with status code %s', response.status)
+
+    async def __get_tokens(self, url: str, cookies: SimpleCookie) -> OndusToken:
+        """
+        Retrieve OndusToken from the provided URL after log in with username and password.
+
+        :param url: The URL to send the request to.
+        :type url: str
+        :param cookies: The cookies to include in the request.
+        :type cookies: SimpleCookie
+        :return: The OndusToken object obtained from the response.
+        :rtype: OndusToken
+        """
+        try:
+            response = await self._session.get(url=url, cookies=cookies)
+        except Exception as e:
+            _LOGGER.error('Get Refresh Token response exception %s', str(e))
+        else:
+            return OndusToken.from_dict(await response.json())
+
+    async def __refresh_tokens(self, refresh_token: str) -> OndusToken:
+        """
+        Refreshes the tokens using the provided refresh token.
+
+        :param refresh_token: The refresh token to use for refreshing the tokens.
+        :type refresh_token: str
+        :return: The new OndusToken generated after refreshing the tokens.
+        :rtype: OndusToken
+        """
+        response = await self._session.post(url=f'{self.__api_url}/oidc/refresh', json={
+            'refresh_token': refresh_token
+        })
+
+        return OndusToken.from_dict(await response.json())
+
+    def __is_access_token_valid(self) -> bool:
+        """
+        Check if the access token is still valid.
+
+        :return: True if the token is valid, False otherwise.
+        :rtype: bool
+        """
+        if (self.__tokens is not None and
+                (datetime.now() - self.__token_update_time).total_seconds() < self.__tokens.expires_in):
+            return True
+        else:
+            return False
+
+    def __is_refresh_token_valid(self) -> bool:
+        """
+        Check if the refresh token is valid.
+
+        :return: True if the refresh token is still valid, False otherwise.
+        :rtype: bool
+        """
+        if (self.__tokens is not None and
+                (datetime.now() - self.__token_update_time).total_seconds() < self.__tokens.refresh_expires_in):
+            return True
+        else:
+            return False
+
+    async def __update_invalid_token(self):
+        """
+        Update the invalid token with a new token if possible, otherwise raise an error.
+
+        :return: None
+        """
+        if not self.__is_access_token_valid() and self.__is_refresh_token_valid():
+            self.__set_token(await self.__refresh_tokens(self.__tokens.refresh_token))
+        elif not self.__is_access_token_valid() and not self.__is_refresh_token_valid():
+            _LOGGER.error('Both access token and refresh token are invalid. Please login again.')
+            raise ValueError('Both access token and refresh token are invalid. Please login again.')
+
+    async def __get(self, url: str) -> Dict[str, Any]:
+        """
+        Retrieve data from the specified URL using a GET request.
+
+        :param url: The URL to retrieve data from.
+        :type url: str
+        :return: A dictionary containing the retrieved data.
+        :rtype: Dict[str, Any]
+        """
+        await self.__update_invalid_token()
+        response = await self._session.get(url=url, headers={
+            'Authorization': f'Bearer {self.__tokens.access_token}'
+        })
+
+        if response.status in (200, 201):
+            return await response.json()
+
+    async def __post(self, url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Send a POST request to the specified URL with the given data.
+
+        :param url: The URL to send the request to.
+        :type url: str
+        :param data: The data to include in the request body.
+        :type data: Dict[str, Any]
+        :return: A dictionary representing the response JSON.
+        :rtype: Dict[str, Any]
+        """
+        await self.__update_invalid_token()
+        response = await self._session.post(url=url, json=data, headers={
+            'Authorization': f'Bearer {self.__tokens.access_token}'
+        })
+
+        if response.status == 201:
+            return await response.json()
+
+    async def login(self, username: Optional[str] = None, password: Optional[str] = None,
+                    refresh_token: Optional[str] = None) -> None:
+        """
+        Logs a user into the system.
+
+        Note: Whether username and password or a refresh token is required.
+
+        :param username: The username of the user.
+        :type username: str
+        :param password: The password of the user.
+        :type password: str
+        :param refresh_token: A valid refresh token
+        :type refresh_token: Optional[str]
+        :return: None
+        """
+        _LOGGER.info('Login to Ondus API')
+
+        if refresh_token is not None:
+            _LOGGER.debug('Login with refresh token')
+            self.__set_token(await self.__refresh_tokens(refresh_token))
+
+        elif username is not None and password is not None:
+            _LOGGER.debug('Login with username/password')
+            cookie, action = await self.__get_oidc_action()
+            token_url = await self.__login(action, username, password, cookie)
+            self.__set_token(await self.__get_tokens(token_url, cookie))
+
+        else:
+            _LOGGER.error('Login required.')
+            raise ValueError('Invalid login parameters.')
 
     async def get_dashboard(self) -> Locations:
         """
@@ -25,8 +244,9 @@ class OndusApi:
         :return: The locations information obtained from the dashboard.
         :rtype: Locations
         """
+        _LOGGER.debug('Get dashboard information')
         url = f'{self.__api_url}/dashboard'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return Locations.from_dict(data)
 
     async def get_locations(self) -> List[Location]:
@@ -36,8 +256,9 @@ class OndusApi:
         :return: A list of Location objects.
         :rtype: List[Location]
         """
+        _LOGGER.debug('Get locations')
         url = f'{self.__api_url}/locations'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return [Location.from_dict(location) for location in data]
 
     async def get_rooms(self, location_id: string) -> List[Room]:
@@ -49,8 +270,9 @@ class OndusApi:
         :return: A list of Room objects representing the rooms.
         :rtype: List[Room]
         """
+        _LOGGER.debug('Get rooms for location %s', location_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return [Room.from_dict(room) for room in data]
 
     async def get_appliances(self, location_id: string, room_id: string) -> List[Appliance]:
@@ -64,8 +286,9 @@ class OndusApi:
         :return: A list of Appliance objects representing the appliances in the specified location and room.
         :rtype: List[Appliance]
         """
+        _LOGGER.debug('Get appliances for location %s and room %s', location_id, room_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return [Appliance.from_dict(appliance) for appliance in data]
 
     async def get_appliance_info(self, location_id: string, room_id: string, appliance_id: string) -> Appliance:
@@ -81,8 +304,9 @@ class OndusApi:
         :return: The information of the appliance.
         :rtype: Appliance
         """
+        _LOGGER.debug('Get appliance information for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return Appliance.from_dict(data)
 
     async def get_appliance_details(self, location_id: string, room_id: string, appliance_id: string) -> Appliance:
@@ -98,8 +322,9 @@ class OndusApi:
         :return: Appliance object containing the details.
         :rtype: Appliance
         """
+        _LOGGER.debug('Get appliance details for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/details'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return Appliance.from_dict(data)
 
     async def get_appliance_status(self, location_id: string, room_id: string, appliance_id: string) -> List[Status]:
@@ -115,8 +340,9 @@ class OndusApi:
         :return: A list of Status objects representing the current status of the appliance.
         :rtype: List[Status]
         """
+        _LOGGER.debug('Get appliance status for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/status'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return [Status.from_dict(state) for state in data]
 
     async def get_appliance_command(self, location_id: string, room_id: string, appliance_id: string) \
@@ -133,8 +359,9 @@ class OndusApi:
         :return: The command for the specified appliance.
         :rtype: ApplianceCommand
         """
+        _LOGGER.debug('Get appliance command for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/command'
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return ApplianceCommand.from_dict(data)
 
     async def get_appliance_notifications(self, location_id: string, room_id: string, appliance_id: string) \
@@ -151,9 +378,23 @@ class OndusApi:
         :return: A list of Notification objects.
         :rtype: List[Notification]
         """
+        _LOGGER.debug('Get appliance notifications for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/notifications'
-        data = await self._session.get(url)
-        return [Notification.from_dict(notification) for notification in data]
+        data = await self.__get(url)
+        notifications = [Notification.from_dict(notification) for notification in data]
+        for notification in notifications:
+            notification_text: str = ''
+            notification_type: str = ''
+            try:
+                notification_text = ondus_notifications['category'][notification.category]['type'][notification.type]
+                notification_type = ondus_notifications['category'][notification.category]['text']
+            except KeyError:
+                notification_text = f'Unknown: Category {notification.category}, Type {notification.type}'
+            finally:
+                notification.notification_text = notification_text
+                notification.notification_type = notification_type
+
+        return notifications
 
     async def get_appliance_data(self, location_id: string, room_id: string, appliance_id: string,
                                  from_date: Optional[datetime] = None, to_date: Optional[datetime] = None,
@@ -176,6 +417,9 @@ class OndusApi:
         :return: The aggregated measurement data for the specified appliance.
         :rtype: MeasurementData
         """
+        _LOGGER.debug('Get appliance data for appliance %s with (from: %s, to: %s, group_by: %s',
+                      appliance_id, from_date, to_date, group_by)
+
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/data/aggregated'
         params = dict()
 
@@ -189,5 +433,37 @@ class OndusApi:
         if params:
             url += '?' + urllib.parse.urlencode(params)
 
-        data = await self._session.get(url)
+        data = await self.__get(url)
         return MeasurementData.from_dict(data)
+
+    async def set_appliance_command(self, location_id: string, room_id: string, appliance_id: string,
+                                    command: OndusCommands, value: bool) -> ApplianceCommand:
+        """
+        This method sets the command for a specific appliance. It takes the location ID, room ID, appliance ID,
+        command, and value as parameters.
+
+        :param location_id: ID of the location containing the appliance.
+        :type location_id: str
+        :param room_id: ID of the room containing the appliance.
+        :type room_id: str
+        :param appliance_id: ID of the appliance to get details for.
+        :type appliance_id: str
+        :param command: The command to be sent to the appliance.
+        :type command: OndusCommands
+        :param value: The value associated with the command.
+        :type value: bool
+        :return: None
+        """
+        _LOGGER.debug('Set appliance command for appliance %s with (command: %s, value: %s)',
+                      appliance_id, command.value, value)
+        url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/command'
+
+        commands: Dict[str, any] = {}
+        if command.value == OndusCommands.OPEN_VALVE.value:
+            commands[OndusCommands.OPEN_VALVE.value] = value
+
+        data = {'type': GroheTypes.GROHE_SENSE_GUARD.value, 'command': commands}
+        response = await self.__post(url, data)
+
+        return ApplianceCommand.from_dict(response)
+

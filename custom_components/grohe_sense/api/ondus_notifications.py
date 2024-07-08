@@ -46,6 +46,7 @@ ondus_notifications = {
                 330: 'Pressure drop detected during check of household water pipes',
                 332: 'Water system check not possible',
                 380: 'Sense guard lost WiFi',
+                381: 'Water pressure drops detected',
                 420: 'Multiple water pressure drops detected - water supply switched off',
                 421: 'Multiple water pressure drops detected',
                 550: 'Blue filter low',

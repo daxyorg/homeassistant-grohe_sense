@@ -1,6 +1,6 @@
 import datetime
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, config
 from typing import List, Optional, Union
 
 from homeassistant.components.persistent_notification import Notification
@@ -110,8 +110,8 @@ class ApplianceCommand:
     appliance_id: str
     type: int
     command: Command
-    commandb64: str
-    timestamp: str
+    timestamp: Optional[str] = None
+    commandb64: Optional[str] = None
 
 
 @dataclass_json
@@ -156,10 +156,11 @@ class Config:
     measurement_transmission_intervall: Optional[int] = None
     measurement_transmission_intervall_offset: Optional[int] = None
 
+
 @dataclass_json
 @dataclass
 class Appliance:
-    appliance_id: str
+    id: str = field(metadata=config(field_name='appliance_id'))
     installation_date: str
     name: str
     serial_number: str
@@ -229,17 +230,19 @@ class Notification:
     type: int
     threshold_quantity: str
     threshold_type: str
+    notification_text: Optional[str] = None
+    notification_type: Optional[str] = None
 
 
 @dataclass_json
 @dataclass
 class Measurement:
     date: str
-    flowrate: Optional[float]
-    pressure: Optional[float]
-    temperature_guard: Optional[float]
-    temperature: Optional[float]
-    humidity: Optional[float]
+    flowrate: Optional[float] = None
+    pressure: Optional[float] = None
+    temperature_guard: Optional[float] = None
+    temperature: Optional[float] = None
+    humidity: Optional[float] = None
 
 
 @dataclass_json
@@ -256,8 +259,8 @@ class Withdrawal:
 @dataclass
 class Data:
     group_by: str
-    measurement: List[Measurement]
-    withdrawals: List[Withdrawal]
+    measurement: Optional[List[Measurement]] = None
+    withdrawals: Optional[List[Withdrawal]] = None
 
 
 @dataclass_json
@@ -266,3 +269,18 @@ class MeasurementData:
     appliance_id: str
     type: int
     data: Data
+
+
+@dataclass_json
+@dataclass
+class OndusToken:
+    access_token: str
+    expires_in: int
+    refresh_expires_in: int
+    refresh_token: str
+    token_type: str
+    id_token: str
+    session_state: str
+    scope: str
+    not_before_policy: int = field(metadata=config(field_name='not-before-policy'))
+    partialLogin: Optional[bool] = None

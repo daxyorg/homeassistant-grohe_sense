@@ -11,7 +11,6 @@ from .entities.grohe_sense_guard_reader import GroheSenseGuardReader
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
 from .enum.grohe_sense_sensor_types_per_unit import SENSOR_TYPES_PER_UNIT
 from .enum.ondus_types import GroheTypes
-from .oauth.oauth_session import OauthSession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "configured under sensor).")
         return
 
-    auth_session: OauthSession = hass.data[DOMAIN]['session']
-    ondus_api = OndusApi(auth_session)
+    ondus_api: OndusApi = hass.data[DOMAIN]['session']
 
     entities: List[GroheSenseNotificationEntity | GroheSenseEntity | GroheSenseGuardWithdrawalsEntity] = []
     devices: List[GroheDeviceDTO] = hass.data[DOMAIN]['devices']

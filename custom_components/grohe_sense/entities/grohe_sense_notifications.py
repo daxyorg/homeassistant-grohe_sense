@@ -10,32 +10,6 @@ from custom_components.grohe_sense.dto.ondus_dtos import Notification
 
 NOTIFICATION_UPDATE_DELAY = timedelta(minutes=1)
 
-NOTIFICATION_TYPES = {
-    # The protocol returns notification information as a (category, type) tuple, this maps to strings
-    (10, 60): 'Firmware update available',
-    (10, 460): 'Firmware update available',
-    (20, 11): 'Battery low',
-    (20, 12): 'Battery empty',
-    (20, 20): 'Below temperature threshold',
-    (20, 21): 'Above temperature threshold',
-    (20, 30): 'Below humidity threshold',
-    (20, 31): 'Above humidity threshold',
-    (20, 40): 'Frost warning',
-    (20, 80): 'Lost wifi',
-    (20, 320): 'Unusual water consumption (water shut off)',
-    (20, 321): 'Unusual water consumption (water not shut off)',
-    (20, 330): 'Micro leakage',
-    (20, 340): 'Frost warning',
-    (20, 380): 'Lost wifi',
-    (20, 381): 'Possible leakage.',
-    (20, 385): 'Possible leakage. Leakage has increased',
-    (30, 0): 'Flooding',
-    (30, 310): 'Pipe break',
-    (30, 400): 'Maximum volume reached',
-    (30, 430): 'Sense detected water (water shut off)',
-    (30, 431): 'Sense detected water (water not shut off)',
-}
-
 
 class GroheSenseNotificationEntity(Entity):
     def __init__(self, ondus_api: OndusApi, device: GroheDeviceDTO):
@@ -57,8 +31,7 @@ class GroheSenseNotificationEntity(Entity):
         notifications = [notification for notification in self._notifications if notification.is_read is False]
 
         if len(notifications) > 0:
-            return NOTIFICATION_TYPES.get((notifications[0].category, notifications[0].type),
-                                          'Unknown notification: {}'.format(notifications[0]))
+            return f'{notifications[0].notification_text}'
         else:
             return 'No notifications'
 
@@ -67,9 +40,8 @@ class GroheSenseNotificationEntity(Entity):
         # Reset notifications
         self._notifications = []
 
-        notifications = await self._ondus_api.get_appliance_notifications(self._device.locationId, self._device.roomId,
-                                                                          self._device.applianceId)
-        for notification in notifications:
-            self._notifications.append(Notification(**notification))
+        self._notifications = await self._ondus_api.get_appliance_notifications(self._device.locationId,
+                                                                                self._device.roomId,
+                                                                                self._device.applianceId)
 
         self._notifications.sort(key=lambda n: n.timestamp, reverse=True)

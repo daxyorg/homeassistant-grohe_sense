@@ -10,7 +10,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
-from custom_components.grohe_sense.oauth.oauth_session import OauthSession, get_refresh_token
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,14 +42,12 @@ async def async_setup(hass, config):
 async def initialize_shared_objects(hass, username, password):
     session = aiohttp_client.async_get_clientsession(hass)
 
-    auth_session = OauthSession(session, BASE_URL, username, password,
-                                await get_refresh_token(session, BASE_URL, username, password))
-
-    ondus_api = OndusApi(auth_session)
+    ondus_api = OndusApi(session)
+    await ondus_api.login(username, password)
 
     devices: List[GroheDeviceDTO] = []
 
-    hass.data[DOMAIN] = {'session': auth_session, 'devices': devices}
+    hass.data[DOMAIN] = {'session': ondus_api, 'devices': devices}
 
     locations = await ondus_api.get_locations()
 
@@ -63,4 +60,4 @@ async def initialize_shared_objects(hass, username, password):
             for appliance in appliances:
                 _LOGGER.debug('Found appliance %s', appliance)
                 devices.append(
-                    GroheDeviceDTO(location.id, room.id, appliance.appliance_id, GroheTypes(appliance.type), appliance.name))
+                    GroheDeviceDTO(location.id, room.id, appliance.id, GroheTypes(appliance.type), appliance.name))
