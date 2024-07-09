@@ -6,7 +6,7 @@ from typing import List
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
+from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Data, Withdrawal, Measurement
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 

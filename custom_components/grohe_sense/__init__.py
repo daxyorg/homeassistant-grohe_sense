@@ -8,7 +8,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.discovery import async_load_platform
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
+from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)

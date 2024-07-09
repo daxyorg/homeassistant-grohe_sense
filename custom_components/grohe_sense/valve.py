@@ -9,7 +9,7 @@ from homeassistant.const import (STATE_UNKNOWN)
 
 from . import (DOMAIN)
 from .api.ondus_api import OndusApi
-from .dto.grohe_device_dto import GroheDevice
+from .dto.grohe_device import GroheDevice
 from .enum.ondus_types import GroheTypes, OndusCommands
 
 _LOGGER = logging.getLogger(__name__)

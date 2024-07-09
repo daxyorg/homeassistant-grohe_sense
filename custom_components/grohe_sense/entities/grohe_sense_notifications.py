@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
+from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 
 NOTIFICATION_UPDATE_DELAY = timedelta(minutes=1)

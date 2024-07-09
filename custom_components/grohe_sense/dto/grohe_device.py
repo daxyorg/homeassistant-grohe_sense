@@ -41,6 +41,14 @@ class GroheDevice:
 
     @staticmethod
     async def get_devices(ondus_api: OndusApi) -> List['GroheDevice']:
+        """
+        Fetches all devices associated with the provided OndusApi instance.
+
+        :param ondus_api: An instance of the OndusApi class.
+        :type ondus_api: OndusApi
+        :return: A list of GroheDevice objects representing the discovered devices.
+        :rtype: List[GroheDevice]
+        """
         devices: List[GroheDevice] = []
 
         locations = await ondus_api.get_locations()

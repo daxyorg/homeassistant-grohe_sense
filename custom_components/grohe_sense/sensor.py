@@ -3,7 +3,7 @@ from typing import List
 
 from . import (DOMAIN)
 from .api.ondus_api import OndusApi
-from .dto.grohe_device_dto import GroheDevice
+from .dto.grohe_device import GroheDevice
 
 from .entities.grohe_sense import GroheSenseEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
