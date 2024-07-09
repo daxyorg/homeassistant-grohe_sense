@@ -125,6 +125,7 @@ class OndusApi:
         :return: The new OndusToken generated after refreshing the tokens.
         :rtype: OndusToken
         """
+        _LOGGER.debug('Refresh tokens as access token expired.')
         response = await self._session.post(url=f'{self.__api_url}/oidc/refresh', json={
             'refresh_token': refresh_token
         })
