@@ -5,14 +5,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
+from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 
 NOTIFICATION_UPDATE_DELAY = timedelta(minutes=1)
 
 
 class GroheSenseNotificationEntity(Entity):
-    def __init__(self, ondus_api: OndusApi, device: GroheDeviceDTO):
+    def __init__(self, ondus_api: OndusApi, device: GroheDevice):
         self._ondus_api = ondus_api
         self._device = device
         self._notifications: List[Notification] = []
@@ -40,8 +40,8 @@ class GroheSenseNotificationEntity(Entity):
         # Reset notifications
         self._notifications = []
 
-        self._notifications = await self._ondus_api.get_appliance_notifications(self._device.locationId,
-                                                                                self._device.roomId,
-                                                                                self._device.applianceId)
+        self._notifications = await self._ondus_api.get_appliance_notifications(self._device.location_id,
+                                                                                self._device.room_id,
+                                                                                self._device.appliance_id)
 
         self._notifications.sort(key=lambda n: n.timestamp, reverse=True)

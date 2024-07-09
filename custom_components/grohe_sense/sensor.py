@@ -3,7 +3,7 @@ from typing import List
 
 from . import (DOMAIN)
 from .api.ondus_api import OndusApi
-from .dto.grohe_device_dto import GroheDeviceDTO
+from .dto.grohe_device_dto import GroheDevice
 
 from .entities.grohe_sense import GroheSenseEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ondus_api: OndusApi = hass.data[DOMAIN]['session']
 
     entities: List[GroheSenseNotificationEntity | GroheSenseEntity | GroheSenseGuardWithdrawalsEntity] = []
-    devices: List[GroheDeviceDTO] = hass.data[DOMAIN]['devices']
+    devices: List[GroheDevice] = hass.data[DOMAIN]['devices']
 
     for device in devices:
         reader = GroheSenseGuardReader(ondus_api, device)

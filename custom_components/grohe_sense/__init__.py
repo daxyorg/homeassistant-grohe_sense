@@ -8,7 +8,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.discovery import async_load_platform
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
+from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,33 +31,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     _LOGGER.debug("Loading Grohe Sense")
+    session = aiohttp_client.async_get_clientsession(hass)
 
-    await initialize_shared_objects(hass, config.get(DOMAIN).get(CONF_USERNAME), config.get(DOMAIN).get(CONF_PASSWORD))
+    ondus_api = OndusApi(session)
+    await ondus_api.login(config.get(DOMAIN).get(CONF_USERNAME), config.get(DOMAIN).get(CONF_PASSWORD))
+
+    devices: List[GroheDevice] = await GroheDevice.get_devices(ondus_api)
+
+    hass.data[DOMAIN] = {'session': ondus_api, 'devices': devices}
 
     await async_load_platform(hass, 'sensor', DOMAIN, {}, config)
     await async_load_platform(hass, 'valve', DOMAIN, {}, config)
     return True
-
-
-async def initialize_shared_objects(hass, username, password):
-    session = aiohttp_client.async_get_clientsession(hass)
-
-    ondus_api = OndusApi(session)
-    await ondus_api.login(username, password)
-
-    devices: List[GroheDeviceDTO] = []
-
-    hass.data[DOMAIN] = {'session': ondus_api, 'devices': devices}
-
-    locations = await ondus_api.get_locations()
-
-    for location in locations:
-        _LOGGER.debug('Found location %s', location)
-        rooms = await ondus_api.get_rooms(location.id)
-        for room in rooms:
-            _LOGGER.debug('Found room %s', room)
-            appliances = await ondus_api.get_appliances(location.id, room.id)
-            for appliance in appliances:
-                _LOGGER.debug('Found appliance %s', appliance)
-                devices.append(
-                    GroheDeviceDTO(location.id, room.id, appliance.id, GroheTypes(appliance.type), appliance.name))

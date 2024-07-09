@@ -6,7 +6,7 @@ from typing import List
 from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
+from custom_components.grohe_sense.dto.grohe_device_dto import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Data, Withdrawal, Measurement
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class GroheSenseGuardReader:
 
-    def __init__(self, ondus_api: OndusApi, device: GroheDeviceDTO):
+    def __init__(self, ondus_api: OndusApi, device: GroheDevice):
         self._ondus_api = ondus_api
         self._device = device
 
@@ -27,7 +27,7 @@ class GroheSenseGuardReader:
     @property
     def applianceId(self):
         """ returns the appliance Identifier, looks like a UUID, so hopefully unique """
-        return self._device.applianceId
+        return self._device.appliance_id
 
     @property
     def poll_from(self):
@@ -53,13 +53,13 @@ class GroheSenseGuardReader:
                           datetime.now() - self._data_fetch_completed)
             return
 
-        _LOGGER.debug("Fetching new data for appliance %s with name %s", self._device.applianceId, self._device.name)
+        _LOGGER.debug("Fetching new data for appliance %s with name %s", self._device.appliance_id, self._device.name)
         self._fetching_data = asyncio.Event()
 
         poll_from = self._poll_from.strftime('%Y-%m-%d')
 
-        measurements_response = await self._ondus_api.get_appliance_data(self._device.locationId, self._device.roomId,
-                                                                         self._device.applianceId,
+        measurements_response = await self._ondus_api.get_appliance_data(self._device.location_id, self._device.room_id,
+                                                                         self._device.appliance_id,
                                                                          datetime.strptime(poll_from, "%Y-%m-%d"))
 
         measurements: List[Measurement] = []
