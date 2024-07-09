@@ -49,18 +49,19 @@ class GroheDevice:
         :return: A list of GroheDevice objects representing the discovered devices.
         :rtype: List[GroheDevice]
         """
+        _LOGGER.debug(f'Getting all available Grohe devices')
         devices: List[GroheDevice] = []
 
         locations = await ondus_api.get_locations()
 
         for location in locations:
-            _LOGGER.debug('Found location %s', location)
             rooms = await ondus_api.get_rooms(location.id)
             for room in rooms:
-                _LOGGER.debug('Found room %s', room)
                 appliances = await ondus_api.get_appliances(location.id, room.id)
                 for appliance in appliances:
-                    _LOGGER.debug('Found appliance %s', appliance)
+                    _LOGGER.debug(
+                        f'Found in location {location.id} and room {room.id} the following appliance: {appliance}'
+                    )
                     devices.append(GroheDevice(location.id, room.id, appliance))
 
         return devices
