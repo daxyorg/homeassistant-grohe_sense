@@ -35,7 +35,7 @@ async def async_setup(hass, config):
     await initialize_shared_objects(hass, config.get(DOMAIN).get(CONF_USERNAME), config.get(DOMAIN).get(CONF_PASSWORD))
 
     await async_load_platform(hass, 'sensor', DOMAIN, {}, config)
-    await async_load_platform(hass, 'switch', DOMAIN, {}, config)
+    await async_load_platform(hass, 'valve', DOMAIN, {}, config)
     return True
 
 
