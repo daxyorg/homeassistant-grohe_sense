@@ -1,47 +1,35 @@
 from datetime import timedelta
 from typing import List
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from custom_components.grohe_sense import BASE_URL
-from custom_components.grohe_sense.dto.grohe_device_dto import GroheDeviceDTO
-from custom_components.grohe_sense.dto.notification_dto import NotificationDto
+from custom_components.grohe_sense.api.ondus_api import OndusApi
+from custom_components.grohe_sense.dto.grohe_device import GroheDevice
+from custom_components.grohe_sense.dto.ondus_dtos import Notification
+from custom_components.grohe_sense.entities.configuration.grohe_entity_configuration import SensorTypes
 
 NOTIFICATION_UPDATE_DELAY = timedelta(minutes=1)
 
-NOTIFICATION_TYPES = {
-    # The protocol returns notification information as a (category, type) tuple, this maps to strings
-    (10, 60): 'Firmware update available',
-    (10, 460): 'Firmware update available',
-    (20, 11): 'Battery low',
-    (20, 12): 'Battery empty',
-    (20, 20): 'Below temperature threshold',
-    (20, 21): 'Above temperature threshold',
-    (20, 30): 'Below humidity threshold',
-    (20, 31): 'Above humidity threshold',
-    (20, 40): 'Frost warning',
-    (20, 80): 'Lost wifi',
-    (20, 320): 'Unusual water consumption (water shut off)',
-    (20, 321): 'Unusual water consumption (water not shut off)',
-    (20, 330): 'Micro leakage',
-    (20, 340): 'Frost warning',
-    (20, 380): 'Lost wifi',
-    (20, 381): 'Possible leakage.',
-    (20, 385): 'Possible leakage. Leakage has increased',
-    (30, 0): 'Flooding',
-    (30, 310): 'Pipe break',
-    (30, 400): 'Maximum volume reached',
-    (30, 430): 'Sense detected water (water shut off)',
-    (30, 431): 'Sense detected water (water not shut off)',
-}
-
 
 class GroheSenseNotificationEntity(Entity):
-    def __init__(self, auth_session, device: GroheDeviceDTO):
-        self._auth_session = auth_session
+    def __init__(self, domain: str, api: OndusApi, device: GroheDevice, sensor_type: SensorTypes):
+        self._api = api
+        self._domain: str = domain
         self._device = device
-        self._notifications: List[NotificationDto] = []
+        self._sensor_type = sensor_type
+        self._notifications: List[Notification] = []
+
+        self._attr_name = f'{self._device.name} {self._sensor_type.value}'
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        return DeviceInfo(identifiers={(self._domain, self._device.appliance_id)},
+                          name=self._device.name,
+                          manufacturer='Grohe',
+                          model=self._device.device_name,
+                          sw_version=self._device.sw_version)
 
     @property
     def name(self):
@@ -57,8 +45,7 @@ class GroheSenseNotificationEntity(Entity):
         notifications = [notification for notification in self._notifications if notification.is_read is False]
 
         if len(notifications) > 0:
-            return NOTIFICATION_TYPES.get((notifications[0].category, notifications[0].type),
-                                          'Unknown notification: {}'.format(notifications[0]))
+            return f'{notifications[0].notification_text}'
         else:
             return 'No notifications'
 
@@ -67,10 +54,8 @@ class GroheSenseNotificationEntity(Entity):
         # Reset notifications
         self._notifications = []
 
-        notifications = await self._auth_session.get(
-            BASE_URL + f'locations/{self._device.locationId}/rooms/{self._device.roomId}/appliances/{self._device.applianceId}/notifications')
-
-        for notification in notifications:
-            self._notifications.append(NotificationDto(**notification))
+        self._notifications = await self._api.get_appliance_notifications(self._device.location_id,
+                                                                          self._device.room_id,
+                                                                          self._device.appliance_id)
 
         self._notifications.sort(key=lambda n: n.timestamp, reverse=True)

@@ -1,22 +1,25 @@
 import logging
 from typing import List
 
-from . import (DOMAIN, GROHE_SENSE_GUARD_TYPE)
-from .dto.grohe_device_dto import GroheDeviceDTO
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+
+from .const import (DOMAIN)
+from .api.ondus_api import OndusApi
+from .dto.grohe_device import GroheDevice
+from .entities.configuration.grohe_entity_configuration import GROHE_ENTITY_CONFIG, SensorTypes
 
 from .entities.grohe_sense import GroheSenseEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
 from .entities.grohe_sense_guard_reader import GroheSenseGuardReader
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
-from .enum.grohe_sense_sensor_types_per_unit import SENSOR_TYPES_PER_UNIT
-from .enum.grohe_types import GroheTypes
-from .oauth.oauth_session import OauthSession
+from .enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    _LOGGER.debug("Starting Grohe Sense sensor")
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+    _LOGGER.debug(f'Adding sensor entities from config entry {entry}')
 
     if DOMAIN not in hass.data or 'devices' not in hass.data[DOMAIN]:
         _LOGGER.error(
@@ -24,22 +27,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "configured under sensor).")
         return
 
-    auth_session: OauthSession = hass.data[DOMAIN]['session']
+    ondus_api: OndusApi = hass.data[DOMAIN]['session']
 
     entities: List[GroheSenseNotificationEntity | GroheSenseEntity | GroheSenseGuardWithdrawalsEntity] = []
-    devices: List[GroheDeviceDTO] = hass.data[DOMAIN]['devices']
+    devices: List[GroheDevice] = hass.data[DOMAIN]['devices']
 
     for device in devices:
-        reader = GroheSenseGuardReader(auth_session, device)
-        entities.append(GroheSenseNotificationEntity(auth_session, device))
+        reader = GroheSenseGuardReader(ondus_api, device)
+        await reader.async_update()
 
-        if device.type in SENSOR_TYPES_PER_UNIT:
-            for info in SENSOR_TYPES_PER_UNIT.get(device.type, []):
-                entities.append(GroheSenseEntity(reader, device.name, info))
-
-            if device.type == GroheTypes.GROHE_SENSE_GUARD:  # The sense guard also gets sensor entities for water flow
-                entities.append(GroheSenseGuardWithdrawalsEntity(reader, device.name, 1))
-                entities.append(GroheSenseGuardWithdrawalsEntity(reader, device.name, 7))
+        if device.type in GROHE_ENTITY_CONFIG:
+            for sensors in GROHE_ENTITY_CONFIG.get(device.type):
+                _LOGGER.debug(f'Attaching sensor {sensors} to device {device}')
+                if sensors == SensorTypes.WATER_CONSUMPTION:
+                    entities.append(GroheSenseGuardWithdrawalsEntity(DOMAIN, reader, device, sensors, 1))
+                    entities.append(GroheSenseGuardWithdrawalsEntity(DOMAIN, reader, device, sensors, 7))
+                elif sensors == SensorTypes.NOTIFICATION:
+                    entities.append(GroheSenseNotificationEntity(DOMAIN, ondus_api, device, sensors))
+                else:
+                    entities.append(GroheSenseEntity(DOMAIN, reader, device, sensors))
         else:
             _LOGGER.warning('Unrecognized appliance %s, ignoring.', device)
     if entities:
