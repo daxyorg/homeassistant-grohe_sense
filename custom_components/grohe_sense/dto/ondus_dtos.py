@@ -238,7 +238,7 @@ class Notification:
 @dataclass
 class Measurement:
     date: str
-    flowrate: Optional[float] = None
+    flow_rate: Optional[float] = field(default=None, metadata=config(field_name='flowrate'))
     pressure: Optional[float] = None
     temperature_guard: Optional[float] = None
     temperature: Optional[float] = None

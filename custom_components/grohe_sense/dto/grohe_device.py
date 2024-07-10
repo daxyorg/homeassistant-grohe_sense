@@ -13,7 +13,6 @@ class GroheDevice:
         self._location_id = location_id
         self._room_id = room_id
         self.appliance = appliance
-        GroheTypes(appliance.type)
 
     @property
     def location_id(self):
@@ -28,6 +27,10 @@ class GroheDevice:
         return self.appliance.id
 
     @property
+    def sw_version(self) -> str:
+        return self.appliance.version
+
+    @property
     def name(self) -> str:
         return self.appliance.name
 
@@ -38,6 +41,18 @@ class GroheDevice:
     @property
     def type(self) -> GroheTypes:
         return GroheTypes(self.appliance.type)
+
+    @property
+    def device_name(self) -> str:
+        dev_name = self.type
+        if dev_name == GroheTypes.GROHE_SENSE:
+            return 'Sense'
+        elif dev_name == GroheTypes.GROHE_SENSE_GUARD:
+            return 'Sense Guard'
+        elif dev_name == GroheTypes.GROHE_SENSE_PLUS:
+            return 'Sense Plus'
+        else:
+            return 'Unknown'
 
     @staticmethod
     async def get_devices(ondus_api: OndusApi) -> List['GroheDevice']:

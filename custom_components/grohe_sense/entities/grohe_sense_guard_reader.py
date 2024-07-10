@@ -8,6 +8,7 @@ from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Data, Withdrawal, Measurement
+from custom_components.grohe_sense.entities.configuration.grohe_entity_configuration import SensorTypes
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,11 +116,21 @@ class GroheSenseGuardReader:
         else:
             return STATE_UNAVAILABLE
 
-    def measurement(self, key):
+    def measurement(self, sensor_type: SensorTypes):
         if self._sensor_data is None:
             return STATE_UNAVAILABLE
 
         measurement = self.__get_last_measurement()
-        if measurement.__dict__.get(key) is not None:
-            return measurement.__dict__.get(key)
-        return STATE_UNKNOWN
+
+        if sensor_type == SensorTypes.PRESSURE:
+            return measurement.pressure
+        elif sensor_type == SensorTypes.TEMPERATURE:
+            if self._device.type == GroheTypes.GROHE_SENSE_GUARD:
+                return measurement.temperature_guard
+            else:
+                return measurement.temperature
+        elif sensor_type == SensorTypes.HUMIDITY:
+            return measurement.humidity
+        elif sensor_type == SensorTypes.FLOW_RATE:
+            return measurement.flow_rate
+

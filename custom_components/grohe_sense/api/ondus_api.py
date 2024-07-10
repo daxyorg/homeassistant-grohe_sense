@@ -207,7 +207,7 @@ class OndusApi:
             return await response.json()
 
     async def login(self, username: Optional[str] = None, password: Optional[str] = None,
-                    refresh_token: Optional[str] = None) -> None:
+                    refresh_token: Optional[str] = None) -> bool:
         """
         Logs a user into the system.
 
@@ -236,6 +236,11 @@ class OndusApi:
         else:
             _LOGGER.error('Login required.')
             raise ValueError('Invalid login parameters.')
+
+        if self.__is_access_token_valid():
+            return True
+        else:
+            return False
 
     async def get_dashboard(self) -> Locations:
         """
