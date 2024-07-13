@@ -1,6 +1,5 @@
-import logging
 from typing import List
-
+import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -8,12 +7,10 @@ from .const import (DOMAIN)
 from .api.ondus_api import OndusApi
 from .dto.grohe_device import GroheDevice
 from .entities.configuration.grohe_entity_configuration import GROHE_ENTITY_CONFIG, SensorTypes
-
 from .entities.grohe_sense import GroheSenseEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
 from .entities.grohe_sense_guard_reader import GroheSenseGuardReader
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
-from .enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
 
