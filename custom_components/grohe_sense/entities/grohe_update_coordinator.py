@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class GroheUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, device: GroheDevice, api: OndusApi) -> None:
-        super().__init__(hass, _LOGGER, name='Grohe Sense', update_interval=timedelta(seconds=120), always_update=True)
+        super().__init__(hass, _LOGGER, name='Grohe Sense', update_interval=timedelta(seconds=300), always_update=True)
         self._api = api
         self._device = device
         self._last_update = datetime.now()
