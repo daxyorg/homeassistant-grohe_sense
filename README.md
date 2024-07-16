@@ -15,7 +15,7 @@ It's a small, battery-powered device, so don't expect frequent updates. It seems
  
 When you install this, you get the following sensors for each Sense Guard (subject to change, still haven't figured out what makes sense really):
  - **water_consumption** (as total increasing)
- - **flowrate**
+ - **flow_rate**
  - **pressure** 
  - **temperature**
  - **notifications**
@@ -25,7 +25,7 @@ You will also get a valve device (so, be careful with `group.all_switches`, as t
 
 The Sense Guard uploads data to its server every 15 minutes (at least the one I have), so don't expect to use this for anything close to real-time. For water withdrawals, it seems to report the withdrawal only when it ends, so if you continuously withdraw water, I guess those sensors may stay at 0. Hopefully, that would show up in the flowrate sensor.
 
-The notifications sensor is a string of all your unread notifications (newline-separated). I recommend installing the Grohe Sense app, where there is a UI to read them (so they disappear from this sensor). On first start, you may find you have a lot of old unread notifications. The notifications I know how to parse are listed in `NOTIFICATION_TYPES` in `sensor.py`, if the API returns something unknown, it will be shown as `Unknown notification:` and then a json dump. If you see that, please consider submitting a bug report with the `category` and `type` fields from the Json + some description of what it means (can be found by finding the corresponding notification in the Grohe Sense app).
+The notifications sensor is a string of all your unread notifications (newline-separated). I recommend installing the Grohe Sense app, where there is a UI to read them (so they disappear from this sensor). On first start, you may find you have a lot of old unread notifications. The notifications I know how to parse are listed in `ondus_notifications` in `ondus_notifications.py`, if the API returns something unknown, it will be shown as `Unknown: Category %d, Type %d` and then a json dump. If you see that, please consider submitting a bug report with the `category` and `type` fields from the Json + some description of what it means (can be found by finding the corresponding notification in the Grohe Sense app).
 
 ## Automation ideas
 - Turning water off when you're away (and dishwasher, washer, et.c. are not running) and turning it back on when home again.
@@ -34,6 +34,10 @@ The notifications sensor is a string of all your unread notifications (newline-s
 - Send Slack notification when your alarm is armed away and flowrate is >0 (controlling for the high latency, plus dishwashers, ice makers, et.c.).
 
 Graphing water consumption is also nice. Note that the data returned by Grohe's servers is extremely detailed, so for nicer graphs, you may want to talk to the servers directly and access the json data, rather than go via this integration.
+
+## Energy dashboard
+If a Sense Guard is installed, the water consumption sensor can be used to integrate into the energy dashboard.
+![Water consumption in energy dashboard](./assets/waterconsumption.png)
 
 ## Installation
 
