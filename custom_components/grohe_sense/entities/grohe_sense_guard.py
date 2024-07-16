@@ -1,4 +1,4 @@
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,7 +22,7 @@ class GroheSenseGuardWithdrawalsEntity(CoordinatorEntity, SensorEntity):
         self._attr_device_class = self._sensor.device_class
         self._attr_name = f'{self._device.name} {self._sensor_type.value}'
         self._attr_native_unit_of_measurement = self._sensor.unit_of_measurement
-        self._attr_state_class = 'total_increasing'
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def device_info(self) -> DeviceInfo | None:
