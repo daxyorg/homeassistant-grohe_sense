@@ -404,7 +404,8 @@ class OndusApi:
 
     async def get_appliance_data(self, location_id: string, room_id: string, appliance_id: string,
                                  from_date: Optional[datetime] = None, to_date: Optional[datetime] = None,
-                                 group_by: Optional[OndusGroupByTypes] = None) -> MeasurementData:
+                                 group_by: Optional[OndusGroupByTypes] = None,
+                                 dateAsFullDay: Optional[bool] = None) -> MeasurementData:
         """
         Retrieves aggregated data for a specific appliance within a room.
 
@@ -430,9 +431,15 @@ class OndusApi:
         params = dict()
 
         if from_date is not None:
-            params.update({'from': from_date.isoformat()})
+            if dateAsFullDay:
+                params.update({'from': from_date.date()})
+            else:
+                params.update({'from': from_date.isoformat()})
         if to_date is not None:
-            params.update({'to': to_date.isoformat()})
+            if dateAsFullDay:
+                params.update({'to': to_date.date()})
+            else:
+                params.update({'to': to_date.isoformat()})
         if group_by is not None:
             params.update({'groupBy': group_by})
 

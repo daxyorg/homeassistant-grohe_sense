@@ -14,14 +14,13 @@ When you install this, you get the following sensors for Sense:
 It's a small, battery-powered device, so don't expect frequent updates. It seems to measure every hour, but the app also said it only uploads every 24h. The sensors I implemented only give the latest measurement returned from the server.
  
 When you install this, you get the following sensors for each Sense Guard (subject to change, still haven't figured out what makes sense really):
- - **1_day** Liters of water withdrawn today (resets to 0 at midnight)
- - **7_day** Liters of water withdrawn during the last 144 hours.
+ - **water_consumption** (as total increasing)
  - **flowrate**
  - **pressure** 
- - **temperature_guard**
+ - **temperature**
  - **notifications**
 
-You will also get a switch device (so, be careful with `group.all_switches`, as that now includes your water) called
+You will also get a valve device (so, be careful with `group.all_switches`, as that now includes your water) called
  - **valve**
 
 The Sense Guard uploads data to its server every 15 minutes (at least the one I have), so don't expect to use this for anything close to real-time. For water withdrawals, it seems to report the withdrawal only when it ends, so if you continuously withdraw water, I guess those sensors may stay at 0. Hopefully, that would show up in the flowrate sensor.
@@ -51,28 +50,22 @@ Graphing water consumption is also nice. Note that the data returned by Grohe's 
 
 ### Step 2: Get your Grohe authentication token
 
-#### Option 1: Via your login credentenials
-- Configure the integration
-```
-grohe_sense:
-username: "YOUR_LOGIN_NAME"
-password: "YOUR_PASSWORD"
+#### Via config flow
+The component supports the config flow of home assistant. 
 
-```
+After you have added the component and restarted home assistant, you can search for 'Grohe Sense':
 
-#### Option 2: Via token (needs regular regeneration)
-- Ensure everything is set up and working in Grohe's Ondus app
-- Go to https://idp2-apigw.cloud.grohe.com/v3/iot/oidc/login
-- Bring up developer tools
-- Log in, that'll try redirecting your browser with a 302 to an url starting with `ondus://idp2-apigw.cloud.grohe.com/v3/iot/oidc/token`, which an off-the-shelf Chrome will ignore
-- You should see this failed redirect in your developer tools. Copy out the full URL and replace `ondus` with `https` and visit that URL (will likely only work once, and will expire, so don't be too slow).
-- This gives you a json response. Save it and extract refresh_token from it (manually, or `jq .refresh_token < file.json`)
+![Search for Grohe Sense](./assets/search.png)
 
-Put the following in your home assistant config (N.B., format has changed, this component is no longer configured as a sensor platform)
-```
-grohe_sense:
-  refresh_token: "YOUR_VERY_VERY_LONG_REFRESH_TOKEN"
-```
+After selecting the component you can enter your credentials (username/password):
+
+![Enter credentials](./assets/login.png)
+
+If everything went well, you get a list of all your found devices, and you can assign them to an area (new or existing):
+
+![Found devices can be added to areas](./assets/found_devices.png)
+
+When you've clicked on finish the devices are added to home assistant and can be managed via UI.
 
 ## Remarks on the "API"
 I have not seen any documentation from Grohe on the API this integration is using, so likely it was only intended for their app. Breaking changes have happened previously, and can easily happen again. I make no promises that I'll maintain this module when that happens.

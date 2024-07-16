@@ -5,8 +5,8 @@
       "user": {
         "title": "Login to Grohe",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "username": "E-Mail",
+          "password": "Password"
         }
       }
     },

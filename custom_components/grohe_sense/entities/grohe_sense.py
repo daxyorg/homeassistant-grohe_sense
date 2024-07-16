@@ -1,20 +1,22 @@
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .configuration.grohe_entity_configuration import SensorTypes, SENSOR_CONFIGURATION
-from .grohe_sense_guard_reader import GroheSenseGuardReader
+from .grohe_update_coordinator import GroheUpdateCoordinator
 from ..dto.grohe_device import GroheDevice
 
 
-class GroheSenseEntity(SensorEntity):
-    def __init__(self, domain: str, reader: GroheSenseGuardReader, device: GroheDevice, sensor_type: SensorTypes):
-        super().__init__()
-        self._reader = reader
+class GroheSenseEntity(CoordinatorEntity, SensorEntity):
+    def __init__(self, domain: str, coordinator: GroheUpdateCoordinator, device: GroheDevice, sensor_type: SensorTypes):
+        super().__init__(coordinator)
+        self._coordinator = coordinator
         self._device = device
         self._sensor_type = sensor_type
         self._sensor = SENSOR_CONFIGURATION.get(sensor_type)
         self._domain = domain
+        self._value: float | None = None
 
         # Needed for Sensor Entity
         self._attr_device_class = self._sensor.device_class
@@ -35,12 +37,11 @@ class GroheSenseEntity(SensorEntity):
 
     @property
     def native_value(self):
-        raw_state = self._reader.measurement(self._sensor_type)
-        if raw_state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return raw_state
-        else:
-            # Return the value of the calculation specific for each sensor
-            return self._sensor.function(raw_state)
+        return self._value
 
-    async def async_update(self):
-        await self._reader.async_update()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if self._coordinator.data.measurement is not None:
+            self._value = self._coordinator.data.measurement[self._sensor_type.value]
+            self.async_write_ha_state()
+
