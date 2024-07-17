@@ -28,6 +28,7 @@ GROHE_ENTITY_CONFIG: Dict[GroheTypes, List[SensorTypes]] = {
     GroheTypes.GROHE_SENSE: [SensorTypes.TEMPERATURE, SensorTypes.HUMIDITY, SensorTypes.NOTIFICATION],
     GroheTypes.GROHE_SENSE_GUARD: [SensorTypes.TEMPERATURE, SensorTypes.FLOW_RATE, SensorTypes.PRESSURE,
                                    SensorTypes.NOTIFICATION, SensorTypes.WATER_CONSUMPTION],
+    GroheTypes.GROHE_BLUE_PROFESSIONAL: [SensorTypes.NOTIFICATION]
 }
 
 SENSOR_CONFIGURATION: Dict[SensorTypes, Sensor] = {
