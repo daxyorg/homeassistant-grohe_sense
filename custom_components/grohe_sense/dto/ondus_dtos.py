@@ -69,6 +69,9 @@ class Measurement:
     remaining_filter_liters: Optional[int] = None
     remaining_co2_liters: Optional[int] = None
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 
 @dataclass_json
 @dataclass
