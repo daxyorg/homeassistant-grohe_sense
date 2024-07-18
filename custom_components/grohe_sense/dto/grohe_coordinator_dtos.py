@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
-from dataclasses_json import dataclass_json, Undefined
+from dataclasses_json import dataclass_json, Undefined, config
 
 
 @dataclass
@@ -34,7 +34,7 @@ class MeasurementBlueDto:
     remaining_filter: int
     time_since_last_withdrawal: int
     time_since_restart: int
-    time_offset: int
+    time_offset: int = field(metadata=config(field_name='timeoffset'))
     water_running_time_carbonated: int
     water_running_time_medium: int
     water_running_time_still: int

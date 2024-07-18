@@ -49,7 +49,7 @@ class GroheBlueUpdateCoordinator(DataUpdateCoordinator):
                 notification = f'{notifications[0].notification_text}'
 
         if details.data_latest.measurement is not None:
-            measurement = MeasurementBlueDto.from_dict(details.data_latest.measurement)
+            measurement = MeasurementBlueDto.from_dict(details.data_latest.measurement.to_dict())
 
         return measurement, notification
 

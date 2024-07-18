@@ -37,7 +37,7 @@ class Status:
 
 @dataclass_json
 @dataclass
-class Measurement:
+class MeasurementDto:
     timestamp: Optional[str] = None
     temperature: Optional[float] = None
     humidity: Optional[int] = None
@@ -83,7 +83,7 @@ class AverageMeasurements:
 @dataclass_json
 @dataclass
 class DataLatest:
-    measurement: Measurement
+    measurement: MeasurementDto
     average_measurements: Optional[AverageMeasurements] = None
 
 
@@ -342,7 +342,7 @@ class Notification:
 
 @dataclass_json
 @dataclass
-class Measurement:
+class MeasurementSenseDto:
     date: str
     flow_rate: Optional[float] = field(default=None, metadata=config(field_name='flowrate'))
     pressure: Optional[float] = None
@@ -365,7 +365,7 @@ class Withdrawal:
 @dataclass
 class Data:
     group_by: str
-    measurement: Optional[List[Measurement]] = None
+    measurement: Optional[List[MeasurementSenseDto]] = None
     withdrawals: Optional[List[Withdrawal]] = None
 
 
