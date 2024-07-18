@@ -1,4 +1,6 @@
-from homeassistant.components.sensor import SensorEntity
+from datetime import datetime
+
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -48,6 +50,10 @@ class GroheSensorEntity(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         if self._coordinator.data.measurement is not None:
-            self._value = self._coordinator.data.measurement[self._sensor_type.value]
+            data = self._coordinator.data.measurement[self._sensor_type.value]
+            if self._sensor.device_class == SensorDeviceClass.TIMESTAMP and isinstance(data, str):
+                self._value = datetime.fromisoformat(data)
+            else:
+                self._value = self._coordinator.data.measurement[self._sensor_type.value]
             self.async_write_ha_state()
 
