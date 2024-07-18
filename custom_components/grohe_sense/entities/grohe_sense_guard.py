@@ -4,12 +4,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .configuration.grohe_entity_configuration import SensorTypes, SENSOR_CONFIGURATION
-from .grohe_update_coordinator import GroheUpdateCoordinator
+from .grohe_sense_update_coordinator import GroheSenseUpdateCoordinator
 from ..dto.grohe_device import GroheDevice
 
 
 class GroheSenseGuardWithdrawalsEntity(CoordinatorEntity, SensorEntity):
-    def __init__(self, domain: str, coordinator: GroheUpdateCoordinator, device: GroheDevice, sensor_type: SensorTypes):
+    def __init__(self, domain: str, coordinator: GroheSenseUpdateCoordinator, device: GroheDevice, sensor_type: SensorTypes):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._device = device

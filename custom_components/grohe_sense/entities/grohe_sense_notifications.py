@@ -7,11 +7,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 from custom_components.grohe_sense.entities.configuration.grohe_entity_configuration import SensorTypes
-from custom_components.grohe_sense.entities.grohe_update_coordinator import GroheUpdateCoordinator
+from custom_components.grohe_sense.entities.grohe_blue_update_coordinator import GroheBlueUpdateCoordinator
+from custom_components.grohe_sense.entities.grohe_sense_update_coordinator import GroheSenseUpdateCoordinator
 
 
 class GroheSenseNotificationEntity(CoordinatorEntity, SensorEntity):
-    def __init__(self, domain: str, coordinator: GroheUpdateCoordinator, device: GroheDevice, sensor_type: SensorTypes):
+    def __init__(self, domain: str, coordinator: GroheSenseUpdateCoordinator | GroheBlueUpdateCoordinator,
+                 device: GroheDevice, sensor_type: SensorTypes):
         super().__init__(coordinator)
 
         self._coordinator = coordinator

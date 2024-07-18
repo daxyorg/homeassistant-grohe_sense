@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_coordinator_dtos import MeasurementDto, CoordinatorDto
+from custom_components.grohe_sense.dto.grohe_coordinator_dtos import MeasurementSenseDto, CoordinatorDto
 from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes
@@ -15,7 +15,7 @@ from custom_components.grohe_sense.enum.ondus_types import GroheTypes
 _LOGGER = logging.getLogger(__name__)
 
 
-class GroheUpdateCoordinator(DataUpdateCoordinator):
+class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, device: GroheDevice, api: OndusApi) -> None:
         super().__init__(hass, _LOGGER, name='Grohe Sense', update_interval=timedelta(seconds=300), always_update=True)
         self._api = api
@@ -33,28 +33,28 @@ class GroheUpdateCoordinator(DataUpdateCoordinator):
         notifications = await self._api.get_appliance_notifications(self._device.location_id, self._device.room_id,
                                                                     self._device.appliance_id)
         notifications.sort(key=lambda n: n.timestamp, reverse=True)
-        notifications = [notification for notification in self._notifications if notification.is_read is False]
+        notifications = [notification for notification in notifications if notification.is_read is False]
 
         if len(notifications) > 0:
             return f'{notifications[0].notification_text}'
         else:
             return 'No notifications'
 
-    async def _get_measurements(self) -> Tuple[MeasurementDto, float]:
+    async def _get_measurements(self) -> Tuple[MeasurementSenseDto, float]:
         """
         This method retrieves the latest measurements and withdrawals for a given device.
 
         :param self: The current object instance.
         :return: A tuple containing the latest measurement (MeasurementDto object) and the latest withdrawal value
                  (float). If no measurement or withdrawal data is available, the corresponding values will be None.
-        :rtype: Tuple[MeasurementDto, float]
+        :rtype: Tuple[MeasurementSenseDto, float]
         """
         measurements_response = await self._api.get_appliance_data(self._device.location_id, self._device.room_id,
                                                                    self._device.appliance_id,
                                                                    self._last_update, None, None, True)
 
         withdrawal: float | None = None
-        measurement = MeasurementDto()
+        measurement = MeasurementSenseDto()
         if measurements_response.data.measurement is not None:
             """Get the first measurement of the device. This is also the latest measurement"""
             measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)

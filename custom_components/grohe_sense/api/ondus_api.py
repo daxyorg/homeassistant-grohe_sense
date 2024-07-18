@@ -387,25 +387,29 @@ class OndusApi:
         _LOGGER.debug('Get appliance notifications for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/notifications'
         data = await self.__get(url)
-        notifications = [Notification.from_dict(notification) for notification in data]
-        for notification in notifications:
-            notification_text: str = ''
-            notification_type: str = ''
-            try:
-                notification_text = ondus_notifications['category'][notification.category]['type'][notification.type]
-                notification_type = ondus_notifications['category'][notification.category]['text']
-            except KeyError:
-                notification_text = f'Unknown: Category {notification.category}, Type {notification.type}'
-            finally:
-                notification.notification_text = notification_text
-                notification.notification_type = notification_type
+
+        if data is not None:
+            notifications = [Notification.from_dict(notification) for notification in data]
+            for notification in notifications:
+                notify_text: str = ''
+                notify_type: str = ''
+                try:
+                    notify_text = ondus_notifications['category'][notification.category]['type'][notification.type]
+                    notify_type = ondus_notifications['category'][notification.category]['text']
+                except KeyError:
+                    notify_text = f'Unknown: Category {notification.category}, Type {notification.type}'
+                finally:
+                    notification.notification_text = notify_text
+                    notification.notification_type = notify_type
+        else:
+            notifications = []
 
         return notifications
 
     async def get_appliance_data(self, location_id: string, room_id: string, appliance_id: string,
                                  from_date: Optional[datetime] = None, to_date: Optional[datetime] = None,
                                  group_by: Optional[OndusGroupByTypes] = None,
-                                 dateAsFullDay: Optional[bool] = None) -> MeasurementData:
+                                 date_as_full_day: Optional[bool] = None) -> MeasurementData:
         """
         Retrieves aggregated data for a specific appliance within a room.
 
@@ -421,6 +425,8 @@ class OndusApi:
         :type to_date: datetime
         :param group_by: (optional) The time period for grouping the data. Defaults to None.
         :type group_by: OndusGroupByTypes
+        :param date_as_full_day: 
+        :type date_as_full_day: bool
         :return: The aggregated measurement data for the specified appliance.
         :rtype: MeasurementData
         """
@@ -431,12 +437,12 @@ class OndusApi:
         params = dict()
 
         if from_date is not None:
-            if dateAsFullDay:
+            if date_as_full_day:
                 params.update({'from': from_date.date()})
             else:
                 params.update({'from': from_date.isoformat()})
         if to_date is not None:
-            if dateAsFullDay:
+            if date_as_full_day:
                 params.update({'to': to_date.date()})
             else:
                 params.update({'to': to_date.isoformat()})

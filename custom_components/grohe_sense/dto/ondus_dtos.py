@@ -45,8 +45,8 @@ class Measurement:
     pressure: Optional[float] = None
     temperature_guard: Optional[float] = None
     battery: Optional[int] = None
-    cleaning_count: Optional[int] = None
     # The following is for the Grohe Blue
+    cleaning_count: Optional[int] = None
     date_of_cleaning: Optional[str] = None
     date_of_co2_replacement: Optional[str] = None
     date_of_filter_replacement: Optional[str] = None
