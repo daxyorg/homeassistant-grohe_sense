@@ -92,7 +92,7 @@ SENSOR_CONFIGURATION: Dict[SensorTypes, Sensor] = {
     SensorTypes.PRESSURE: Sensor(SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, lambda x: x),
     SensorTypes.WATER_CONSUMPTION: Sensor(SensorDeviceClass.WATER, UnitOfVolume.LITERS, lambda x: x),
     # From here Blue Sensors are configured
-    SensorTypes.CLEANING_COUNT: Sensor(None, UnitOfVolume.LITERS, lambda x: x),
+    SensorTypes.CLEANING_COUNT: Sensor(None, None, lambda x: x),
     SensorTypes.DATE_OF_CLEANING: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),
     SensorTypes.DATE_OF_CO2_REPLACEMENT: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),
     SensorTypes.DATE_OF_FILTER_REPLACEMENT: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),
