@@ -37,14 +37,43 @@ class Status:
 
 @dataclass_json
 @dataclass
-class Measurement:
-    timestamp: str
+class MeasurementDto:
+    timestamp: Optional[str] = None
     temperature: Optional[float] = None
     humidity: Optional[int] = None
     flow_rate: Optional[float] = None
     pressure: Optional[float] = None
     temperature_guard: Optional[float] = None
     battery: Optional[int] = None
+    # The following is for the Grohe Blue
+    cleaning_count: Optional[int] = None
+    date_of_cleaning: Optional[str] = None
+    date_of_co2_replacement: Optional[str] = None
+    date_of_filter_replacement: Optional[str] = None
+    filter_change_count: Optional[int] = None
+    max_idle_time: Optional[int] = None
+    open_close_cycles_carbonated: Optional[int] = None
+    open_close_cycles_still: Optional[int] = None
+    operating_time: Optional[int] = None
+    power_cut_count: Optional[int] = None
+    pump_count: Optional[int] = None
+    pump_running_time: Optional[int] = None
+    remaining_co2: Optional[int] = None
+    remaining_filter: Optional[int] = None
+    time_since_last_withdrawal: Optional[int] = None
+    time_since_restart: Optional[int] = None
+    time_offset: Optional[int] = field(default=None, metadata=config(field_name='timeoffset'))
+    water_running_time_carbonated: Optional[int] = None
+    water_running_time_medium: Optional[int] = None
+    water_running_time_still: Optional[int] = None
+    remaining_filter_liters: Optional[int] = None
+    remaining_co2_liters: Optional[int] = None
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
 
 
 @dataclass_json
@@ -57,7 +86,7 @@ class AverageMeasurements:
 @dataclass_json
 @dataclass
 class DataLatest:
-    measurement: Measurement
+    measurement: MeasurementDto
     average_measurements: Optional[AverageMeasurements] = None
 
 
@@ -117,7 +146,7 @@ class ApplianceCommand:
 @dataclass_json
 @dataclass
 class Config:
-    thresholds: List[Threshold]
+    thresholds: Optional[List[Threshold]] = None
     measurement_period: Optional[int] = None
     action_on_major_leakage: Optional[int] = None
     action_on_minor_leakage: Optional[int] = None
@@ -155,6 +184,82 @@ class Config:
     sprinkler_mode_stop_time: Optional[int] = None
     measurement_transmission_intervall: Optional[int] = None
     measurement_transmission_intervall_offset: Optional[int] = None
+    co2_type: Optional[int] = None
+    hose_length: Optional[int] = None
+    co2_consumption_medium: Optional[int] = None
+    co2_consumption_carbonated: Optional[int] = None
+    guest_mode_active: Optional[bool] = None
+    auto_flush_active: Optional[bool] = None
+    flush_confirmed: Optional[bool] = None
+    f_parameter: Optional[int] = None
+    l_parameter: Optional[int] = None
+    flow_rate_still: Optional[int] = None
+    flow_rate_medium: Optional[int] = None
+    flow_rate_carbonated: Optional[int] = None
+
+
+@dataclass_json
+@dataclass
+class Params:
+    water_hardness: int
+    carbon_hardness: int
+    filter_type: int
+    variant: int
+    auto_flush_reminder_notif: bool
+    consumables_low_notif: bool
+    product_information_notif: bool
+
+
+@dataclass_json
+@dataclass
+class Errors:
+    errors_1: bool
+    errors_2: bool
+    errors_3: bool
+    errors_4: bool
+    errors_5: bool
+    errors_6: bool
+    errors_7: bool
+    errors_8: bool
+    errors_9: bool
+    errors_10: bool
+    errors_11: bool
+    errors_12: bool
+    errors_13: bool
+    errors_14: bool
+    errors_15: bool
+    errors_16: bool
+    error1_counter: int
+    error2_counter: int
+    error3_counter: int
+    error4_counter: int
+    error5_counter: int
+    error6_counter: int
+    error7_counter: int
+    error8_counter: int
+    error9_counter: int
+    error10_counter: int
+    error11_counter: int
+    error12_counter: int
+    error13_counter: int
+    error14_counter: int
+    error15_counter: int
+    error16_counter: int
+
+
+@dataclass_json
+@dataclass
+class State:
+    start_time: int
+    APPLIANCE_SUCCESSFUL_CONFIGURED: bool
+    co2_empty: bool
+    co2_20l_reached: bool
+    filter_empty: bool
+    filter_20l_reached: bool
+    cleaning_mode_active: bool
+    cleaning_needed: bool
+    flush_confirmation_required: bool
+    System_error_bitfield: int
 
 
 @dataclass_json
@@ -171,6 +276,10 @@ class Appliance:
     config: Config
     role: str
     registration_complete: bool
+    presharedkey: Optional[str] = None
+    params: Optional[Params] = None
+    error: Optional[Errors] = None
+    state: Optional[State] = None
     calculate_average_since: Optional[str] = None
     pressure_notification: Optional[bool] = None
     snooze_status: Optional[str] = None
@@ -236,7 +345,7 @@ class Notification:
 
 @dataclass_json
 @dataclass
-class Measurement:
+class MeasurementSenseDto:
     date: str
     flow_rate: Optional[float] = field(default=None, metadata=config(field_name='flowrate'))
     pressure: Optional[float] = None
@@ -259,7 +368,7 @@ class Withdrawal:
 @dataclass
 class Data:
     group_by: str
-    measurement: Optional[List[Measurement]] = None
+    measurement: Optional[List[MeasurementSenseDto]] = None
     withdrawals: Optional[List[Withdrawal]] = None
 
 
