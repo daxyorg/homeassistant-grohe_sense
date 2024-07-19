@@ -7,10 +7,12 @@ from .const import (DOMAIN)
 from .api.ondus_api import OndusApi
 from .dto.grohe_device import GroheDevice
 from .entities.configuration.grohe_entity_configuration import GROHE_ENTITY_CONFIG, SensorTypes
-from .entities.grohe_sense import GroheSenseEntity
+from .entities.grohe_blue_update_coordinator import GroheBlueUpdateCoordinator
+from .entities.grohe_sensor import GroheSensorEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
-from .entities.grohe_update_coordinator import GroheUpdateCoordinator
+from .entities.grohe_sense_update_coordinator import GroheSenseUpdateCoordinator
+from .enum.ondus_types import GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +22,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     ondus_api: OndusApi = hass.data[DOMAIN]['session']
 
-    entities: List[GroheSenseNotificationEntity | GroheSenseEntity | GroheSenseGuardWithdrawalsEntity] = []
+    entities: List[GroheSenseNotificationEntity | GroheSensorEntity | GroheSenseGuardWithdrawalsEntity] = []
     devices: List[GroheDevice] = hass.data[DOMAIN]['devices']
 
     for device in devices:
-        coordinator = GroheUpdateCoordinator(hass, device, ondus_api)
+        if device.type == GroheTypes.GROHE_BLUE_PROFESSIONAL:
+            coordinator = GroheBlueUpdateCoordinator(hass, device, ondus_api)
+        else:
+            coordinator = GroheSenseUpdateCoordinator(hass, device, ondus_api)
 
         if device.type in GROHE_ENTITY_CONFIG:
             for sensors in GROHE_ENTITY_CONFIG.get(device.type):
@@ -34,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 elif sensors == SensorTypes.NOTIFICATION:
                     entities.append(GroheSenseNotificationEntity(DOMAIN, coordinator, device, sensors))
                 else:
-                    entities.append(GroheSenseEntity(DOMAIN, coordinator, device, sensors))
+                    entities.append(GroheSensorEntity(DOMAIN, coordinator, device, sensors))
         else:
             _LOGGER.warning('Unrecognized appliance %s, ignoring.', device)
         await coordinator.async_request_refresh()

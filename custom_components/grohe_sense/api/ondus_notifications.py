@@ -1,5 +1,3 @@
-# credits: https://github.com/windkh/node-red-contrib-grohe-sense/blob/main/grohe/ondusApi.js
-
 ondus_notifications = {
     'category': {
         0: {
