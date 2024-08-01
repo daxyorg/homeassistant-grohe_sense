@@ -1,5 +1,4 @@
 {
   "name": "Grohe Sense",
   "render_readme": true,
-  "domains": ["sensor", "valve"]
 }
