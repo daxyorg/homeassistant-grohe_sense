@@ -17,6 +17,20 @@ from custom_components.grohe_sense.enum.ondus_types import OndusGroupByTypes, On
 _LOGGER = logging.getLogger(__name__)
 
 
+def is_iteratable(obj: Any) -> bool:
+    """
+    Check if an object is iterable.
+
+    :param obj: The object to be checked.
+    :return: True if the object is iterable, False otherwise.
+    """
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
+
+
 class OndusApi:
     __base_url: str = 'https://idp2-apigw.cloud.grohe.com'
     __api_url: str = __base_url + '/v3/iot'
@@ -265,7 +279,10 @@ class OndusApi:
         _LOGGER.debug('Get locations')
         url = f'{self.__api_url}/locations'
         data = await self.__get(url)
-        return [Location.from_dict(location) for location in data]
+        if data is None or not is_iteratable(data):
+            return []
+        else:
+            return [Location.from_dict(location) for location in data]
 
     async def get_rooms(self, location_id: string) -> List[Room]:
         """
@@ -279,7 +296,10 @@ class OndusApi:
         _LOGGER.debug('Get rooms for location %s', location_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms'
         data = await self.__get(url)
-        return [Room.from_dict(room) for room in data]
+        if data is None or not is_iteratable(data):
+            return []
+        else:
+            return [Room.from_dict(room) for room in data]
 
     async def get_appliances(self, location_id: string, room_id: string) -> List[Appliance]:
         """
@@ -295,7 +315,10 @@ class OndusApi:
         _LOGGER.debug('Get appliances for location %s and room %s', location_id, room_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances'
         data = await self.__get(url)
-        return [Appliance.from_dict(appliance) for appliance in data]
+        if data is None or not is_iteratable(data):
+            return []
+        else:
+            return [Appliance.from_dict(appliance) for appliance in data]
 
     async def get_appliance_info(self, location_id: string, room_id: string, appliance_id: string) -> Appliance:
         """
