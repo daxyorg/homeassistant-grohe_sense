@@ -12,7 +12,7 @@ from lxml import html
 
 from custom_components.grohe_sense.api.ondus_notifications import ondus_notifications
 from custom_components.grohe_sense.dto.ondus_dtos import Locations, Location, Room, Appliance, Notification, Status, \
-    ApplianceCommand, MeasurementData, OndusToken, PressureMeasurementStart
+    ApplianceCommand, MeasurementData, OndusToken, PressureMeasurementStart, ProfileNotifications
 from custom_components.grohe_sense.enum.ondus_types import OndusGroupByTypes, OndusCommands, GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
@@ -226,6 +226,29 @@ class OndusApi:
 
         if response.status == 201:
             return await response.json()
+
+    async def __put(self, url: str, data: Dict[str, Any] | None) -> Dict[str, Any] | None:
+        """
+        Send a PUT request to the specified URL with the given data.
+
+        :param url: The URL to send the request to.
+        :type url: str
+        :param data: The data to include in the request body.
+        :type data: Dict[str, Any]
+        :return: A dictionary representing the response JSON.
+        :rtype: Dict[str, Any]
+        """
+        await self.__update_invalid_token()
+        response = await self._session.put(url=url, json=data, headers={
+            'Authorization': f'Bearer {self.__tokens.access_token}'
+        })
+
+        if response.status == 201:
+            return await response.json()
+        elif response.status == 200:
+            return None
+        else:
+            _LOGGER.warning(f'URL {url} returned status code {response.status} for PUT request')
 
     async def login(self, username: Optional[str] = None, password: Optional[str] = None,
                     refresh_token: Optional[str] = None) -> bool:
@@ -546,5 +569,35 @@ class OndusApi:
         else:
             return None
 
+    async def get_profile_notifications(self, page_size: int = 50) -> ProfileNotifications | None:
+        """
+            Get profile notifications.
 
+            :param page_size: The maximum number of notifications to retrieve per page. Default is 50.
+            :return: ProfileNotifications.
+        """
+        _LOGGER.debug('Get latest %d notifications', page_size)
+        url = f'{self.__api_url}/profile/notifications?pageSize={page_size}'
+        data = await self.__get(url)
 
+        if data is not None:
+            notifications = ProfileNotifications.from_dict(data)
+        else:
+            notifications = None
+
+        return notifications
+
+    async def update_profile_notification_state(self, notification_id: str, state: bool) -> None:
+        """
+            Get profile notifications.
+
+            :param notification_id: The unique ID of the notification to update.
+            :param state: Sets the state of the notification
+            :return: None.
+        """
+        _LOGGER.debug('Set state of notification %s to %s', notification_id, state)
+        url = f'{self.__api_url}/profile/notifications/{notification_id}'
+        data = {'is_read': state}
+        await self.__put(url, data)
+
+        return None

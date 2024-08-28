@@ -6,8 +6,7 @@ Grohe Sense and Grohe Blue integration for Home Assistant
 
 This is an integration to get Grohe Sense (small leak sensor) and Grohe Sense Guard (main water pipe sensor/breaker) sensors into Home Assistant.
 Additionally, also the Grohe Blue Professional (water filter with carbonation) is now integrated into Home Assistant
-Far from production quality, not affiliated with Grohe. 
-My understanding of the protocol is based on https://github.com/FlorianSW/grohe-ondus-api-java.
+Not affiliated with Grohe. 
 
 ## Devices
 Below is a list of supported devices.
@@ -32,6 +31,9 @@ When you install this, you get the following sensors for each Sense Guard:
 
 You will also get a valve device (so, be careful with `group.all_switches`, as that now includes your water) called
  - **valve**
+
+You will also get a button entity for triggering the pressure measurement
+ - **pressure_measurement**
 
 The Sense Guard uploads data to its server every 15 minutes (at least the one I have), so don't expect to use this for anything close to real-time. 
 For water withdrawals, it seems to report the withdrawal only when it ends, so if you continuously withdraw water, I guess those sensors may stay at 0. 
@@ -63,8 +65,6 @@ When you install this, you get the following sensors for each Grohe Blue Profess
 - **water_running_time_still**
 - **remaining_filter_liters**
 - **remaining_co2_liters**
-
-Thanks to 
 
 ### For all devices
 The notifications sensor is a string of all your unread notifications (newline-separated).
@@ -122,7 +122,7 @@ When you've clicked on finish the devices are added to home assistant and can be
 ## Remarks on the "API"
 I have not seen any documentation from Grohe on the API this integration is using, so likely it was only intended for their app.
 Breaking changes have happened previously, and can easily happen again.
-I make no promises that I'll maintain this module when that happens.
+I try to always keep the integration updated to their latest API.
 
 The API returns _much_ more detailed data than is exposed via these sensors.
 For withdrawals, it returns an exact start- and endtime for each withdrawal, as well as volume withdrawn.
@@ -135,3 +135,4 @@ Thanks to:
  - [gkreitz](https://github.com/gkreitz/homeassistant-grohe_sense) for the implementation and to [weissm](https://github.com/weissm/homeassistant-grohe_sense) from whom I forked the repository.
  - [rama1981](https://github.com/rama1981) for reaching out and going through the trial and error for the Grohe Blue Professional.
  - [windkh](https://github.com/windkh/node-red-contrib-grohe-sense) from whom I've token a lot of the notification types available.
+ - [FlorianSW](https://github.com/FlorianSW/grohe-ondus-api-java) for the initial protocol understanding

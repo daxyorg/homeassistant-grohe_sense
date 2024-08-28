@@ -345,6 +345,30 @@ class Notification:
 
 @dataclass_json
 @dataclass
+class ProfileNotification:
+    appliance_name: str
+    room_name: str
+    location_name: str
+    appliance_id: str
+    location_id: int
+    room_id: int
+    notification_id: str
+    category: int
+    is_read: bool
+    timestamp: int
+    notification_type: int
+
+
+@dataclass_json
+@dataclass
+class ProfileNotifications:
+    continuation_token: str
+    remaining_notifications: int
+    notifications: List[ProfileNotification]
+
+
+@dataclass_json
+@dataclass
 class MeasurementSenseDto:
     date: str
     flow_rate: Optional[float] = field(default=None, metadata=config(field_name='flowrate'))
