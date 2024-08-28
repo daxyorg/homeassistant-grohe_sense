@@ -47,5 +47,7 @@ class GroheSenseNotificationEntity(CoordinatorEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._value = self._coordinator.data.notification
-        self.async_write_ha_state()
+        if self._coordinator.data is not None:
+            if self._coordinator.data.notification is not None:
+                self._value = self._coordinator.data.notification
+                self.async_write_ha_state()
