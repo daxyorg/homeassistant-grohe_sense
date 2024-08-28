@@ -184,7 +184,7 @@ class OndusApi:
             _LOGGER.error('Both access token and refresh token are invalid. Please login again.')
             raise ValueError('Both access token and refresh token are invalid. Please login again.')
 
-    async def __get(self, url: str) -> Dict[str, Any]:
+    async def __get(self, url: str) -> Dict[str, Any] | None:
         """
         Retrieve data from the specified URL using a GET request.
 
@@ -200,6 +200,9 @@ class OndusApi:
 
         if response.status in (200, 201):
             return await response.json()
+        else:
+            _LOGGER.warning(f'URL {url} returned status code {response.status}')
+            return None
 
     async def __post(self, url: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -375,7 +378,7 @@ class OndusApi:
         return [Status.from_dict(state) for state in data]
 
     async def get_appliance_command(self, location_id: string, room_id: string, appliance_id: string) \
-            -> ApplianceCommand:
+            -> ApplianceCommand | None:
         """
         Get possible commands for an appliance.
 
@@ -391,7 +394,10 @@ class OndusApi:
         _LOGGER.debug('Get appliance command for appliance %s', appliance_id)
         url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/command'
         data = await self.__get(url)
-        return ApplianceCommand.from_dict(data)
+        if data is not None:
+            return ApplianceCommand.from_dict(data)
+        else:
+            return None
 
     async def get_appliance_notifications(self, location_id: string, room_id: string, appliance_id: string) \
             -> List[Notification]:
@@ -432,7 +438,7 @@ class OndusApi:
     async def get_appliance_data(self, location_id: string, room_id: string, appliance_id: string,
                                  from_date: Optional[datetime] = None, to_date: Optional[datetime] = None,
                                  group_by: Optional[OndusGroupByTypes] = None,
-                                 date_as_full_day: Optional[bool] = None) -> MeasurementData:
+                                 date_as_full_day: Optional[bool] = None) -> MeasurementData | None:
         """
         Retrieves aggregated data for a specific appliance within a room.
 
@@ -476,7 +482,10 @@ class OndusApi:
             url += '?' + urllib.parse.urlencode(params)
 
         data = await self.__get(url)
-        return MeasurementData.from_dict(data)
+        if data is not None:
+            return MeasurementData.from_dict(data)
+        else:
+            return None
 
     async def set_appliance_command(self, location_id: string, room_id: string, appliance_id: string,
                                     command: OndusCommands, value: bool) -> ApplianceCommand:

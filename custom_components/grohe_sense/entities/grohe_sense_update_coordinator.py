@@ -55,24 +55,26 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
 
         withdrawal: float | None = None
         measurement = MeasurementSenseDto()
-        if measurements_response.data.measurement is not None:
-            """Get the first measurement of the device. This is also the latest measurement"""
-            measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)
-            measure = measurements_response.data.measurement[0]
+        if measurements_response is not None:
+            if measurements_response.data is not None:
+                if measurements_response.data.measurement is not None:
+                    """Get the first measurement of the device. This is also the latest measurement"""
+                    measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)
+                    measure = measurements_response.data.measurement[0]
 
-            measurement.flow_rate = measure.flow_rate
-            measurement.pressure = measure.pressure
-            measurement.humidity = measure.humidity
+                    measurement.flow_rate = measure.flow_rate
+                    measurement.pressure = measure.pressure
+                    measurement.humidity = measure.humidity
 
-            if self._device.type == GroheTypes.GROHE_SENSE:
-                measurement.temperature = measure.temperature
-            elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
-                measurement.temperature = measure.temperature_guard
+                    if self._device.type == GroheTypes.GROHE_SENSE:
+                        measurement.temperature = measure.temperature
+                    elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
+                        measurement.temperature = measure.temperature_guard
 
-        if measurements_response.data.withdrawals is not None:
-            withdrawals = measurements_response.data.withdrawals
-            withdrawals.sort(key=lambda m: m.date, reverse=True)
-            withdrawal = withdrawals[0].waterconsumption if withdrawals else None
+                if measurements_response.data.withdrawals is not None:
+                    withdrawals = measurements_response.data.withdrawals
+                    withdrawals.sort(key=lambda m: m.date, reverse=True)
+                    withdrawal = withdrawals[0].waterconsumption if withdrawals else None
 
         return measurement, withdrawal
 
