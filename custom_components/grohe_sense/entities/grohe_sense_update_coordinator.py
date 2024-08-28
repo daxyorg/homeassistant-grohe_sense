@@ -77,6 +77,8 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
                     withdrawals = measurements_response.data.withdrawals
                     withdrawals.sort(key=lambda m: m.date, reverse=True)
                     withdrawal = withdrawals[0].waterconsumption if withdrawals else None
+                else:
+                    withdrawal = 0
 
         return measurement, withdrawal
 
