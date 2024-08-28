@@ -6,6 +6,7 @@ from http.cookies import SimpleCookie
 from typing import List, Optional, Tuple, Dict, Any
 
 import aiohttp
+import jwt
 from aiohttp import ClientSession
 from lxml import html
 
@@ -38,6 +39,7 @@ class OndusApi:
     __token_update_time: datetime = None
     __username: str = None
     __password: str = None
+    __user_id: str = None
 
     def __init__(self, session: ClientSession) -> None:
         self._session = session
@@ -50,6 +52,8 @@ class OndusApi:
         :return: None
         """
         self.__tokens = token
+        tokendata = jwt.decode(token.access_token, options={'verify_signature': False})
+        self.__user_id = tokendata['sub']
         self.__token_update_time = datetime.now()
 
     async def __get_oidc_action(self) -> Tuple[SimpleCookie, str]:
