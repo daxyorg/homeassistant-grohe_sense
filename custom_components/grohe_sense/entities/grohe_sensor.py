@@ -49,11 +49,13 @@ class GroheSensorEntity(CoordinatorEntity, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if self._coordinator.data.measurement is not None:
-            data = self._coordinator.data.measurement[self._sensor_type.value]
-            if self._sensor.device_class == SensorDeviceClass.TIMESTAMP and isinstance(data, str):
-                self._value = datetime.fromisoformat(data)
-            else:
-                self._value = self._coordinator.data.measurement[self._sensor_type.value]
-            self.async_write_ha_state()
+        if self._coordinator is not None:
+            if self._coordinator.data is not None:
+                if self._coordinator.data.measurement is not None:
+                    data = self._coordinator.data.measurement[self._sensor_type.value]
+                    if self._sensor.device_class == SensorDeviceClass.TIMESTAMP and isinstance(data, str):
+                        self._value = datetime.fromisoformat(data)
+                    else:
+                        self._value = self._coordinator.data.measurement[self._sensor_type.value]
+                    self.async_write_ha_state()
 
