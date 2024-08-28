@@ -57,7 +57,8 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
         measurement = MeasurementSenseDto()
         if measurements_response is not None:
             if measurements_response.data is not None:
-                if measurements_response.data.measurement is not None:
+                if (measurements_response.data.measurement is not None
+                        and len(measurements_response.data.measurement) > 0):
                     """Get the first measurement of the device. This is also the latest measurement"""
                     measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)
                     measure = measurements_response.data.measurement[0]
@@ -71,7 +72,8 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
                     elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
                         measurement.temperature = measure.temperature_guard
 
-                if measurements_response.data.withdrawals is not None:
+                if (measurements_response.data.withdrawals is not None
+                        and len(measurements_response.data.withdrawals) > 0):
                     withdrawals = measurements_response.data.withdrawals
                     withdrawals.sort(key=lambda m: m.date, reverse=True)
                     withdrawal = withdrawals[0].waterconsumption if withdrawals else None
