@@ -393,3 +393,17 @@ class OndusToken:
     scope: str
     not_before_policy: int = field(metadata=config(field_name='not-before-policy'))
     partialLogin: Optional[bool] = None
+
+
+@dataclass_json
+@dataclass
+class PressureMeasurementId:
+    id: str
+
+
+@dataclass_json
+@dataclass
+class PressureMeasurementStart:
+    code: int
+    message: str
+    fields: Optional[List[PressureMeasurementId]] = None

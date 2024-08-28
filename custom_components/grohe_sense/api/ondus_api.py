@@ -11,7 +11,7 @@ from lxml import html
 
 from custom_components.grohe_sense.api.ondus_notifications import ondus_notifications
 from custom_components.grohe_sense.dto.ondus_dtos import Locations, Location, Room, Appliance, Notification, Status, \
-    ApplianceCommand, MeasurementData, OndusToken
+    ApplianceCommand, MeasurementData, OndusToken, PressureMeasurementStart
 from custom_components.grohe_sense.enum.ondus_types import OndusGroupByTypes, OndusCommands, GroheTypes
 
 _LOGGER = logging.getLogger(__name__)
@@ -204,7 +204,7 @@ class OndusApi:
             _LOGGER.warning(f'URL {url} returned status code {response.status}')
             return None
 
-    async def __post(self, url: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def __post(self, url: str, data: Dict[str, Any] | None) -> Dict[str, Any]:
         """
         Send a POST request to the specified URL with the given data.
 
@@ -517,4 +517,30 @@ class OndusApi:
         response = await self.__post(url, data)
 
         return ApplianceCommand.from_dict(response)
+
+    async def start_pressure_measurement(self, location_id: string, room_id: string,
+                                         appliance_id: string) -> PressureMeasurementStart | None:
+        """
+        This method sets the command for a specific appliance. It takes the location ID, room ID, appliance ID,
+        command, and value as parameters.
+
+        :param location_id: ID of the location containing the appliance.
+        :type location_id: str
+        :param room_id: ID of the room containing the appliance.
+        :type room_id: str
+        :param appliance_id: ID of the appliance to get details for.
+        :type appliance_id: str
+        :return: None
+        """
+        _LOGGER.debug('Start pressure measurement for appliance %s',appliance_id)
+        url = f'{self.__api_url}/locations/{location_id}/rooms/{room_id}/appliances/{appliance_id}/pressuremeasurement'
+
+        response = await self.__post(url, None)
+
+        if response is not None:
+            return PressureMeasurementStart.from_dict(response)
+        else:
+            return None
+
+
 
