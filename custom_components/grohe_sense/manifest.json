@@ -9,5 +9,5 @@
 	"requirements": [
 		"dataclasses-json==0.6.7"
 	],
-	"version": "v0.9.3"
+	"version": "v0.9.4"
 }
