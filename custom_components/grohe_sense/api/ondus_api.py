@@ -1,7 +1,7 @@
 import logging
 import string
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
 from http.cookies import SimpleCookie
 from typing import List, Optional, Tuple, Dict, Any
 
@@ -37,6 +37,10 @@ class OndusApi:
     __api_url: str = __base_url + '/v3/iot'
     __tokens: OndusToken = None
     __token_update_time: datetime = None
+
+    __update_token_before_expiration: timedelta = timedelta(seconds=300)
+    __access_token_expires: datetime = None
+    __refresh_token_expires: datetime = None
     __username: str = None
     __password: str = None
     __user_id: str = None
@@ -52,8 +56,13 @@ class OndusApi:
         :return: None
         """
         self.__tokens = token
-        tokendata = jwt.decode(token.access_token, options={'verify_signature': False})
-        self.__user_id = tokendata['sub']
+        access_token_data = jwt.decode(token.access_token, options={'verify_signature': False})
+        self.__access_token_expires = datetime.fromtimestamp(int(access_token_data['exp']))
+        self.__user_id = access_token_data['sub']
+
+        refresh_token_data = jwt.decode(token.refresh_token, options={'verify_signature': False})
+        self.__refresh_token_expires = datetime.fromtimestamp(int(refresh_token_data['exp']))
+
         self.__token_update_time = datetime.now()
 
     async def __get_oidc_action(self) -> Tuple[SimpleCookie, str]:
@@ -158,7 +167,8 @@ class OndusApi:
         :rtype: bool
         """
         if (self.__tokens is not None and
-                (datetime.now() - self.__token_update_time).total_seconds() < self.__tokens.expires_in):
+                self.__access_token_expires is not None and
+                self.__access_token_expires - self.__update_token_before_expiration > datetime.now()):
             return True
         else:
             return False
@@ -171,7 +181,8 @@ class OndusApi:
         :rtype: bool
         """
         if (self.__tokens is not None and
-                (datetime.now() - self.__token_update_time).total_seconds() < self.__tokens.refresh_expires_in):
+                self.__refresh_token_expires is not None and
+                self.__refresh_token_expires - self.__update_token_before_expiration > datetime.now()):
             return True
         else:
             return False
