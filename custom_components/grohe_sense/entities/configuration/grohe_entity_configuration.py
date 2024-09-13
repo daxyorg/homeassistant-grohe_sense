@@ -81,7 +81,30 @@ GROHE_ENTITY_CONFIG: Dict[GroheTypes, List[SensorTypes]] = {
                                          SensorTypes.WATER_RUNNING_TIME_STILL,
                                          SensorTypes.REMAINING_FILTER_LITERS,
                                          SensorTypes.REMAINING_CO2_LITERS,
-                                         ]
+                                         ],
+    GroheTypes.GROHE_BLUE_HOME: [SensorTypes.NOTIFICATION,
+                                 SensorTypes.CLEANING_COUNT,
+                                 SensorTypes.DATE_OF_CLEANING,
+                                 SensorTypes.DATE_OF_CO2_REPLACEMENT,
+                                 SensorTypes.DATE_OF_FILTER_REPLACEMENT,
+                                 SensorTypes.FILTER_CHANGE_COUNT,
+                                 SensorTypes.MAX_IDLE_TIME,
+                                 SensorTypes.OPEN_CLOSE_CYCLES_CARBONATED,
+                                 SensorTypes.OPEN_CLOSE_CYCLES_STILL,
+                                 SensorTypes.OPERATING_TIME,
+                                 SensorTypes.POWER_CUT_COUNT,
+                                 SensorTypes.PUMP_COUNT,
+                                 SensorTypes.PUMP_RUNNING_TIME,
+                                 SensorTypes.REMAINING_CO2,
+                                 SensorTypes.REMAINING_FILTER,
+                                 SensorTypes.TIME_SINCE_LAST_WITHDRAWAL,
+                                 SensorTypes.TIME_SINCE_RESTART,
+                                 SensorTypes.WATER_RUNNING_TIME_CARBONATED,
+                                 SensorTypes.WATER_RUNNING_TIME_MEDIUM,
+                                 SensorTypes.WATER_RUNNING_TIME_STILL,
+                                 SensorTypes.REMAINING_FILTER_LITERS,
+                                 SensorTypes.REMAINING_CO2_LITERS,
+                                 ]
 }
 
 SENSOR_CONFIGURATION: Dict[SensorTypes, Sensor] = {

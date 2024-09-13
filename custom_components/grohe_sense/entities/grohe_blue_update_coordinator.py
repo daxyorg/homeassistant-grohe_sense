@@ -39,7 +39,7 @@ class GroheBlueUpdateCoordinator(DataUpdateCoordinator):
         details = await self._api.get_appliance_details(self._device.location_id, self._device.room_id,
                                                         self._device.appliance_id)
 
-        _LOGGER.debug(f'Got the following details for appliance {self._device.appliance_id}: {details}')
+        _LOGGER.debug(f'Got the following details for Grohe Blue appliance {self._device.appliance_id}: {details}')
 
         if details.notifications is not None:
             details.notifications.sort(key=lambda n: n.timestamp, reverse=True)

@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     devices: List[GroheDevice] = hass.data[DOMAIN]['devices']
 
     for device in devices:
-        if device.type == GroheTypes.GROHE_BLUE_PROFESSIONAL:
+        if device.type == GroheTypes.GROHE_BLUE_PROFESSIONAL or device.type == GroheTypes.GROHE_BLUE_HOME:
             coordinator = GroheBlueUpdateCoordinator(hass, device, ondus_api)
         else:
             coordinator = GroheSenseUpdateCoordinator(hass, device, ondus_api)
