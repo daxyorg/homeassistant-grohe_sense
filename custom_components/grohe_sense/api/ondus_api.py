@@ -507,14 +507,14 @@ class OndusApi:
             if date_as_full_day:
                 params.update({'from': from_date.date()})
             else:
-                params.update({'from': from_date.isoformat()})
+                params.update({'from': from_date.strftime('%Y-%m-%dT%H:%M:%S%z')})
         if to_date is not None:
             if date_as_full_day:
                 params.update({'to': to_date.date()})
             else:
-                params.update({'to': to_date.isoformat()})
+                params.update({'to': to_date.strftime('%Y-%m-%dT%H:%M:%S%z')})
         if group_by is not None:
-            params.update({'groupBy': group_by})
+            params.update({'groupBy': group_by.value})
 
         if params:
             url += '?' + urllib.parse.urlencode(params)
