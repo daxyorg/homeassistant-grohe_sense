@@ -77,7 +77,8 @@ class GroheDevice:
                 appliances = await ondus_api.get_appliances(location.id, room.id)
                 for appliance in appliances:
                     _LOGGER.debug(
-                        f'Found in location {location.id} and room {room.id} the following appliance: {appliance}'
+                        f'Found in location {location.id} and room {room.id} the following appliance: {appliance.id} '
+                        f'from type {appliance.type} with name {appliance.name}'
                     )
                     devices.append(GroheDevice(location.id, room.id, appliance))
 
