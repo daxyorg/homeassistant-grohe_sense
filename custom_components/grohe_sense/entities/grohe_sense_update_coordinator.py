@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta
-from typing import List, Tuple
+from typing import List
 from datetime import datetime
 
 from homeassistant.core import HomeAssistant
@@ -10,7 +10,7 @@ from custom_components.grohe_sense.api.ondus_api import OndusApi
 from custom_components.grohe_sense.dto.grohe_coordinator_dtos import MeasurementSenseDto, CoordinatorDto
 from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
-from custom_components.grohe_sense.enum.ondus_types import GroheTypes
+from custom_components.grohe_sense.enum.ondus_types import GroheTypes, OndusGroupByTypes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name='Grohe Sense', update_interval=timedelta(seconds=300), always_update=True)
         self._api = api
         self._device = device
-        self._last_update = datetime.now()
+        self._timezone = datetime.now().astimezone().tzinfo
+        self._last_update = datetime.now().astimezone().replace(tzinfo=self._timezone)
         self._notifications: List[Notification] = []
 
     async def _get_notification(self) -> str:
@@ -40,38 +41,54 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
         else:
             return 'No notifications'
 
-    async def _get_measurements(self) -> Tuple[MeasurementSenseDto, float]:
+    async def _get_actual_measurement(self) -> MeasurementSenseDto:
         """
-        This method retrieves the latest measurements and withdrawals for a given device.
+        Get the actual measurement data of the device.
+
+        :return: MeasurementSenseDto object with the following attributes:
+                 - pressure (float): The pressure measurement of the device.
+                 - flow_rate (float): The flow rate measurement of the device.
+                 - humidity (float): The humidity measurement of the device.
+                 - temperature (float): The temperature measurement of the device.
+        """
+        measurements_response = await self._api.get_appliance_data(self._device.location_id, self._device.room_id,
+                                                                   self._device.appliance_id,
+                                                                   self._last_update - timedelta(hours=1), None,
+                                                                   OndusGroupByTypes.HOUR, False)
+
+        measurement_data = MeasurementSenseDto()
+        if measurements_response and measurements_response.data and measurements_response.data.measurement and len(measurements_response.data.measurement) > 0:
+            """Get the first measurement of the device. This is also the latest measurement"""
+            measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)
+            measure = measurements_response.data.measurement[0]
+
+            measurement_data.pressure = measure.pressure
+            measurement_data.flow_rate = measure.flow_rate
+            measurement_data.humidity = measure.humidity
+
+            if self._device.type == GroheTypes.GROHE_SENSE:
+                measurement_data.temperature = measure.temperature
+            elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
+                measurement_data.temperature = measure.temperature_guard
+
+        return measurement_data
+
+    async def _get_withdrawal(self) -> float | None:
+        """
+        This method retrieves the latest withdrawals for a given device.
 
         :param self: The current object instance.
-        :return: A tuple containing the latest measurement (MeasurementDto object) and the latest withdrawal value
-                 (float). If no measurement or withdrawal data is available, the corresponding values will be None.
-        :rtype: Tuple[MeasurementSenseDto, float]
+        :return: The latest withdrawal value
+                 (float). If no withdrawal data is available, the corresponding values will be None.
+        :rtype: float | None
         """
         measurements_response = await self._api.get_appliance_data(self._device.location_id, self._device.room_id,
                                                                    self._device.appliance_id,
                                                                    self._last_update, None, None, True)
 
         withdrawal: float | None = None
-        measurement = MeasurementSenseDto()
         if measurements_response is not None:
             if measurements_response.data is not None:
-                if (measurements_response.data.measurement is not None
-                        and len(measurements_response.data.measurement) > 0):
-                    """Get the first measurement of the device. This is also the latest measurement"""
-                    measurements_response.data.measurement.sort(key=lambda m: m.date, reverse=True)
-                    measure = measurements_response.data.measurement[0]
-
-                    measurement.flow_rate = measure.flow_rate
-                    measurement.pressure = measure.pressure
-                    measurement.humidity = measure.humidity
-
-                    if self._device.type == GroheTypes.GROHE_SENSE:
-                        measurement.temperature = measure.temperature
-                    elif self._device.type == GroheTypes.GROHE_SENSE_GUARD:
-                        measurement.temperature = measure.temperature_guard
-
                 if (measurements_response.data.withdrawals is not None
                         and len(measurements_response.data.withdrawals) > 0):
                     withdrawals = measurements_response.data.withdrawals
@@ -80,16 +97,17 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
                 else:
                     withdrawal = 0
 
-        return measurement, withdrawal
+        return withdrawal
 
     async def _async_update_data(self) -> CoordinatorDto:
         try:
 
             data = CoordinatorDto()
-            data.measurement, data.withdrawal = await self._get_measurements()
+            data.withdrawal = await self._get_withdrawal()
+            data.measurement = await self._get_actual_measurement()
             data.notification = await self._get_notification()
 
-            self._last_update = datetime.now()
+            self._last_update = datetime.now().astimezone().replace(tzinfo=self._timezone)
             return data
 
         except Exception as e:
