@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import timedelta
 from typing import List
@@ -7,7 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from custom_components.grohe_sense.api.ondus_api import OndusApi
-from custom_components.grohe_sense.dto.grohe_coordinator_dtos import MeasurementSenseDto, CoordinatorDto
+from custom_components.grohe_sense.dto.grohe_coordinator_dtos import MeasurementSenseDto, CoordinatorDto, \
+    LastPressureMeasurement
 from custom_components.grohe_sense.dto.grohe_device import GroheDevice
 from custom_components.grohe_sense.dto.ondus_dtos import Notification
 from custom_components.grohe_sense.enum.ondus_types import GroheTypes, OndusGroupByTypes
@@ -73,6 +75,17 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
 
         return measurement_data
 
+    async def _get_last_pressure_measurement(self) -> LastPressureMeasurement | None:
+        appliance_details = await self._api.get_appliance_details(self._device.location_id, self._device.room_id,
+                                                                  self._device.appliance_id)
+
+        measurement: LastPressureMeasurement | None = None
+        if appliance_details and appliance_details.last_pressure_measurement is not None:
+            measurement = LastPressureMeasurement.from_dict(appliance_details.last_pressure_measurement.to_dict())
+
+        return measurement
+
+
     async def _get_withdrawal(self) -> float | None:
         """
         This method retrieves the latest withdrawals for a given device.
@@ -106,6 +119,7 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
             data.withdrawal = await self._get_withdrawal()
             data.measurement = await self._get_actual_measurement()
             data.notification = await self._get_notification()
+            data.last_pressure_measurement = await self._get_last_pressure_measurement()
 
             self._last_update = datetime.now().astimezone().replace(tzinfo=self._timezone)
             return data

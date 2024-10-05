@@ -1,7 +1,27 @@
 from dataclasses import dataclass, field
+from email.policy import default
 from typing import Optional
 
 from dataclasses_json import dataclass_json, Undefined, config
+
+from custom_components.grohe_sense.enum.ondus_types import PressureMeasurementState
+
+
+@dataclass_json
+@dataclass
+class LastPressureMeasurement:
+    id: str
+    status: str
+    estimated_stop_time: str = field(metadata=config(field_name='estimated_time_of_completion'))
+    start_time: str
+    error_message: str
+    leakage: Optional[bool] = None
+    leakage_level: Optional[int] = field(metadata=config(field_name='level'),default=None)
+    duration: Optional[int] = field(metadata=config(field_name='total_duration'),default=None)
+    pressure_drop: Optional[float] = field(metadata=config(field_name='drop_of_pressure'),default=None)
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 @dataclass
@@ -50,3 +70,4 @@ class CoordinatorDto:
     notification: Optional[str] = None
     measurement: Optional[MeasurementSenseDto] = None
     withdrawal: Optional[float] = None
+    last_pressure_measurement: Optional[LastPressureMeasurement] = None
