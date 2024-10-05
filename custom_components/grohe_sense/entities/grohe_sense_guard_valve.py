@@ -54,7 +54,9 @@ class GroheSenseGuardValve(ValveEntity):
                                                                           self._device.room_id,
                                                                           self._device.appliance_id)
 
-        if command_response and command_response.command and command_response.command.valve_open:
+        if command_response and command_response.command and command_response.command.valve_open is not None:
+            _LOGGER.debug(f'Valve_open state: {command_response.command.valve_open} for appliance '
+                          f'{self._device.appliance_id}')
             self._is_closed = not command_response.command.valve_open
         else:
             _LOGGER.error('Failed to parse out valve_open from commands response: %s', command_response)
