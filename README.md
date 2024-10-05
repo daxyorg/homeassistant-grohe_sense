@@ -39,9 +39,9 @@ The Sense Guard uploads data to its server every 15 minutes (at least the one I 
 For water withdrawals, it seems to report the withdrawal only when it ends, so if you continuously withdraw water, I guess those sensors may stay at 0. 
 Hopefully, that would show up in the flow_rate sensor.
 
-### Grohe Blue Professional
+### Grohe Blue Home/Professional
 
-When you install this, you get the following sensors for each Grohe Blue Professional:
+When you install this, you get the following sensors for each Grohe Blue Home and Professional:
 
 - **cleaning_count**
 - **date_of_cleaning**
