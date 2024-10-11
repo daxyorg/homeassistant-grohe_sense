@@ -19,3 +19,8 @@ class GroheTypes(Enum):
 
 class OndusCommands(Enum):
     OPEN_VALVE = 'valve_open'
+
+
+class PressureMeasurementState(Enum):
+    SUCCESS = 'SUCCESS'
+    START = 'START'

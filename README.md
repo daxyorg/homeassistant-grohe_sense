@@ -35,6 +35,18 @@ You will also get a valve device (so, be careful with `group.all_switches`, as t
 You will also get a button entity for triggering the pressure measurement
  - **pressure_measurement**
 
+As you now can trigger also the pressure measurement, you also get the following sensors for that:
+ - **lpm_start_time** to show you when the last pressure measurement was started
+ - **lpm_estimated_stop_time** to show when it is estimated to finish the measurement
+ - **lpm_status** which can be START (it is running right now) or SUCCESS (Measurement finished - even partial)
+ - **lpm_duration** to show the duration the measurement took
+ - **lpm_leakage** to show if a leakage was detected (not sure if this one is true also means you'll get a notification from Grohe or not)
+ - **lpm_leakage_level** to give you a possible 'rating' of the urgency of the leakage
+ - **lpm_pressure_drop** to give you the whole pressure drop during measurement
+
+**Hint:** At the moment I am not 100% sure about each of the above-mentioned sensors and their actual behaviour
+
+
 The Sense Guard uploads data to its server every 15 minutes (at least the one I have), so don't expect to use this for anything close to real-time. 
 For water withdrawals, it seems to report the withdrawal only when it ends, so if you continuously withdraw water, I guess those sensors may stay at 0. 
 Hopefully, that would show up in the flow_rate sensor.

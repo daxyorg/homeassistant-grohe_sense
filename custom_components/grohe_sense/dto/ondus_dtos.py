@@ -105,12 +105,15 @@ class LastPressureMeasurement:
     status: str
     estimated_time_of_completion: str
     start_time: str
-    leakage: bool
-    level: int
-    total_duration: int
-    drop_of_pressure: float
     error_message: str
-    pressure_curve: List[PressureCurve]
+    leakage: Optional[bool] = None
+    level: Optional[int] = None
+    total_duration: Optional[int] = None
+    drop_of_pressure: Optional[float] = None
+    pressure_curve: Optional[List[PressureCurve]] = None
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 @dataclass_json

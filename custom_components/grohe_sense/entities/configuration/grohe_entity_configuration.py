@@ -16,6 +16,13 @@ class SensorTypes(Enum):
     PRESSURE = 'pressure'
     NOTIFICATION = 'notification'
     WATER_CONSUMPTION = 'water_consumption'
+    LPM_STATUS = 'lpm_status'
+    LPM_START_TIME = 'lpm_start_time'
+    LPM_LEAKAGE = 'lpm_leakage'
+    LPM_LEAKAGE_LEVEL = 'lpm_leakage_level'
+    LPM_PRESSURE_DROP = 'lpm_pressure_drop'
+    LPM_DURATION = 'lpm_duration'
+    LPM_ESTIMATED_STOP_TIME = 'lpm_estimated_stop_time'
     # Sensors for Grohe BLUE
     CLEANING_COUNT = 'cleaning_count'
     DATE_OF_CLEANING = 'date_of_cleaning'
@@ -57,7 +64,14 @@ GROHE_ENTITY_CONFIG: Dict[GroheTypes, List[SensorTypes]] = {
                                    SensorTypes.FLOW_RATE,
                                    SensorTypes.PRESSURE,
                                    SensorTypes.NOTIFICATION,
-                                   SensorTypes.WATER_CONSUMPTION
+                                   SensorTypes.WATER_CONSUMPTION,
+                                   SensorTypes.LPM_STATUS,
+                                   SensorTypes.LPM_START_TIME,
+                                   SensorTypes.LPM_ESTIMATED_STOP_TIME,
+                                   SensorTypes.LPM_LEAKAGE,
+                                   SensorTypes.LPM_LEAKAGE_LEVEL,
+                                   SensorTypes.LPM_PRESSURE_DROP,
+                                   SensorTypes.LPM_DURATION,
                                    ],
     GroheTypes.GROHE_BLUE_PROFESSIONAL: [SensorTypes.NOTIFICATION,
                                          SensorTypes.CLEANING_COUNT,
@@ -114,6 +128,14 @@ SENSOR_CONFIGURATION: Dict[SensorTypes, Sensor] = {
                                   lambda x: x * 3.6),
     SensorTypes.PRESSURE: Sensor(SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, lambda x: x),
     SensorTypes.WATER_CONSUMPTION: Sensor(SensorDeviceClass.WATER, UnitOfVolume.LITERS, lambda x: x),
+    # From here on there are the last pressure measurement information sensors
+    SensorTypes.LPM_STATUS: Sensor(None, None, lambda x: x),
+    SensorTypes.LPM_START_TIME: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),
+    SensorTypes.LPM_ESTIMATED_STOP_TIME: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),
+    SensorTypes.LPM_LEAKAGE: Sensor(None, None, lambda x: x), #Binary Sensor
+    SensorTypes.LPM_LEAKAGE_LEVEL: Sensor(None, None, lambda x: x),
+    SensorTypes.LPM_PRESSURE_DROP: Sensor(SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, lambda x: x),
+    SensorTypes.LPM_DURATION: Sensor(SensorDeviceClass.DURATION, UnitOfTime.SECONDS, lambda x: x),
     # From here Blue Sensors are configured
     SensorTypes.CLEANING_COUNT: Sensor(None, None, lambda x: x),
     SensorTypes.DATE_OF_CLEANING: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),

@@ -8,6 +8,7 @@ from .api.ondus_api import OndusApi
 from .dto.grohe_device import GroheDevice
 from .entities.configuration.grohe_entity_configuration import GROHE_ENTITY_CONFIG, SensorTypes
 from .entities.grohe_blue_update_coordinator import GroheBlueUpdateCoordinator
+from .entities.grohe_sense_guard_last_pressure import GroheSenseGuardLastPressureEntity
 from .entities.grohe_sensor import GroheSensorEntity
 from .entities.grohe_sense_guard import GroheSenseGuardWithdrawalsEntity
 from .entities.grohe_sense_notifications import GroheSenseNotificationEntity
@@ -22,7 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     ondus_api: OndusApi = hass.data[DOMAIN]['session']
 
-    entities: List[GroheSenseNotificationEntity | GroheSensorEntity | GroheSenseGuardWithdrawalsEntity] = []
+    entities: List[GroheSenseNotificationEntity | GroheSensorEntity | GroheSenseGuardWithdrawalsEntity |
+                   GroheSenseGuardLastPressureEntity] = []
     devices: List[GroheDevice] = hass.data[DOMAIN]['devices']
 
     for device in devices:
@@ -38,6 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     entities.append(GroheSenseGuardWithdrawalsEntity(DOMAIN, coordinator, device, sensors))
                 elif sensors == SensorTypes.NOTIFICATION:
                     entities.append(GroheSenseNotificationEntity(DOMAIN, coordinator, device, sensors))
+                elif sensors in [SensorTypes.LPM_DURATION, SensorTypes.LPM_LEAKAGE_LEVEL,
+                                 SensorTypes.LPM_ESTIMATED_STOP_TIME, SensorTypes.LPM_START_TIME,
+                                 SensorTypes.LPM_PRESSURE_DROP, SensorTypes.LPM_LEAKAGE, SensorTypes.LPM_STATUS]:
+                    entities.append(GroheSenseGuardLastPressureEntity(DOMAIN, coordinator, device, sensors))
                 else:
                     entities.append(GroheSensorEntity(DOMAIN, coordinator, device, sensors))
         else:
