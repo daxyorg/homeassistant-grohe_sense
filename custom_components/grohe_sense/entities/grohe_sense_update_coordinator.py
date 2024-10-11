@@ -53,10 +53,12 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
                  - humidity (float): The humidity measurement of the device.
                  - temperature (float): The temperature measurement of the device.
         """
+        group_by = OndusGroupByTypes.DAY if self._device.type == GroheTypes.GROHE_SENSE else OndusGroupByTypes.HOUR
+
         measurements_response = await self._api.get_appliance_data(self._device.location_id, self._device.room_id,
                                                                    self._device.appliance_id,
                                                                    self._last_update - timedelta(hours=1), None,
-                                                                   OndusGroupByTypes.HOUR, False)
+                                                                   group_by, False)
 
         measurement_data = MeasurementSenseDto()
         if measurements_response and measurements_response.data and measurements_response.data.measurement and len(measurements_response.data.measurement) > 0:
