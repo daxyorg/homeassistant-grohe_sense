@@ -78,6 +78,8 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
         return measurement_data
 
     async def _get_last_pressure_measurement(self) -> LastPressureMeasurement | None:
+        _LOGGER.debug(f'Get last pressure measurement for appliance {self._device.appliance_id}')
+
         appliance_details = await self._api.get_appliance_details(self._device.location_id, self._device.room_id,
                                                                   self._device.appliance_id)
 
@@ -125,7 +127,7 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> CoordinatorDto:
         try:
-
+            _LOGGER.debug(f'Updating {self._device.type} (appliance = {self._device.appliance_id}) data')
             data = CoordinatorDto()
             data.withdrawal = await self._get_withdrawal()
             data.measurement = await self._get_actual_measurement()
