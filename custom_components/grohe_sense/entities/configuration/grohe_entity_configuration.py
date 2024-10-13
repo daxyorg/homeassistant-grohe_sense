@@ -22,6 +22,7 @@ class SensorTypes(Enum):
     LPM_LEAKAGE_LEVEL = 'lpm_leakage_level'
     LPM_PRESSURE_DROP = 'lpm_pressure_drop'
     LPM_DURATION = 'lpm_duration'
+    LPM_MAX_FLOW_RATE = 'lpm_max_flow_rate'
     LPM_ESTIMATED_STOP_TIME = 'lpm_estimated_stop_time'
     # Sensors for Grohe BLUE
     CLEANING_COUNT = 'cleaning_count'
@@ -72,6 +73,7 @@ GROHE_ENTITY_CONFIG: Dict[GroheTypes, List[SensorTypes]] = {
                                    SensorTypes.LPM_LEAKAGE_LEVEL,
                                    SensorTypes.LPM_PRESSURE_DROP,
                                    SensorTypes.LPM_DURATION,
+                                   SensorTypes.LPM_MAX_FLOW_RATE,
                                    ],
     GroheTypes.GROHE_BLUE_PROFESSIONAL: [SensorTypes.NOTIFICATION,
                                          SensorTypes.CLEANING_COUNT,
@@ -136,6 +138,9 @@ SENSOR_CONFIGURATION: Dict[SensorTypes, Sensor] = {
     SensorTypes.LPM_LEAKAGE_LEVEL: Sensor(None, None, lambda x: x),
     SensorTypes.LPM_PRESSURE_DROP: Sensor(SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, lambda x: x),
     SensorTypes.LPM_DURATION: Sensor(SensorDeviceClass.DURATION, UnitOfTime.SECONDS, lambda x: x),
+    SensorTypes.LPM_MAX_FLOW_RATE: Sensor(SensorDeviceClass.VOLUME_FLOW_RATE,
+                                          UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+                                          lambda x: x * 3.6),
     # From here Blue Sensors are configured
     SensorTypes.CLEANING_COUNT: Sensor(None, None, lambda x: x),
     SensorTypes.DATE_OF_CLEANING: Sensor(SensorDeviceClass.TIMESTAMP, None, lambda x: x),

@@ -24,3 +24,4 @@ class OndusCommands(Enum):
 class PressureMeasurementState(Enum):
     SUCCESS = 'SUCCESS'
     START = 'START'
+    START_FAILED = 'START_FAILED'

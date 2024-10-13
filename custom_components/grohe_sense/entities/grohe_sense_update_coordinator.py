@@ -84,6 +84,11 @@ class GroheSenseUpdateCoordinator(DataUpdateCoordinator):
         measurement: LastPressureMeasurement | None = None
         if appliance_details and appliance_details.last_pressure_measurement is not None:
             measurement = LastPressureMeasurement.from_dict(appliance_details.last_pressure_measurement.to_dict())
+            if appliance_details.last_pressure_measurement.pressure_curve is not None:
+                curve = appliance_details.last_pressure_measurement.pressure_curve
+                flow_rates = [flow.fr for flow in curve]
+                flow_rates.sort(reverse=True)
+                measurement.max_flow_rate = flow_rates[0] if len(flow_rates) > 0 else None
 
         return measurement
 

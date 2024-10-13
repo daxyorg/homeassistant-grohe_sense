@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
-from email.policy import default
 from typing import Optional
 
-from dataclasses_json import dataclass_json, Undefined, config
+from dataclasses_json import dataclass_json, config
 
-from custom_components.grohe_sense.enum.ondus_types import PressureMeasurementState
+
 
 
 @dataclass_json
@@ -19,6 +18,7 @@ class LastPressureMeasurement:
     leakage_level: Optional[int] = field(metadata=config(field_name='level'),default=None)
     duration: Optional[int] = field(metadata=config(field_name='total_duration'),default=None)
     pressure_drop: Optional[float] = field(metadata=config(field_name='drop_of_pressure'),default=None)
+    max_flow_rate: Optional[float] = None
 
     def __getitem__(self, item):
         return getattr(self, item)
