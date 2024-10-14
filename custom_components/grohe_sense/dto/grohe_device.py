@@ -31,6 +31,10 @@ class GroheDevice:
         return self.appliance.version
 
     @property
+    def stripped_sw_version(self) -> tuple[int, ...]:
+        return tuple(map(int, self.appliance.version.split('.')[:2]))
+
+    @property
     def name(self) -> str:
         return self.appliance.name
 

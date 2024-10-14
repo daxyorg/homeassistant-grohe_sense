@@ -32,6 +32,9 @@ When you install this, you get the following sensors for each Sense Guard:
 You will also get a valve device (so, be careful with `group.all_switches`, as that now includes your water) called
  - **valve**
 
+#### Pressure Measurement
+**Hint:** This is only enabled for Grohe Sense Guard with Software Version 3.6 or newer
+
 You will also get a button entity for triggering the pressure measurement
  - **pressure_measurement**
 
@@ -43,6 +46,7 @@ As you now can trigger also the pressure measurement, you also get the following
  - **lpm_leakage** to show if a leakage was detected (not sure if this one is true also means you'll get a notification from Grohe or not)
  - **lpm_leakage_level** to give you a possible 'rating' of the urgency of the leakage
  - **lpm_pressure_drop** to give you the whole pressure drop during measurement
+ - **lpm_max_flow_rate** the maximum flow rate during pressure measurement from the measurement curve list
 
 **Hint:** At the moment I am not 100% sure about each of the above-mentioned sensors and their actual behaviour
 

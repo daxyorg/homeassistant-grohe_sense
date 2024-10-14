@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     entities = []
 
     for device in filter(lambda d: d.type == GroheTypes.GROHE_SENSE_GUARD, devices):
-        entities.append(
-            GroheSenseGuardButton(DOMAIN, ondus_api, device))
+        if device.stripped_sw_version >= (3, 6):
+            entities.append(GroheSenseGuardButton(DOMAIN, ondus_api, device))
     if entities:
         async_add_entities(entities)
