@@ -32,6 +32,9 @@ When you install this, you get the following sensors for each Sense Guard:
 You will also get a valve device (so, be careful with `group.all_switches`, as that now includes your water) called
  - **valve**
 
+#### Pressure Measurement
+**Hint:** This is only enabled for Grohe Sense Guard with Software Version 3.6 or newer
+
 You will also get a button entity for triggering the pressure measurement
  - **pressure_measurement**
 
